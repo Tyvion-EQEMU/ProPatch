@@ -1,0 +1,62 @@
+from __future__ import annotations
+
+import os
+import shutil
+from pathlib import Path
+
+_DEFAULT_SETTINGS = """\
+[paths]
+mq_rekkas = "C:\\\\Games\\\\MQ-Rekka"
+
+[components]
+rekkas_mq = true
+mq2rwarp = true
+rgmercs = true
+e9loot = true
+
+[protected]
+always = ["config/*", "MacroQuest.ini"]
+"""
+
+
+def get_data_dir() -> Path:
+    if os.name == "nt":
+        public = os.environ.get("PUBLIC", r"C:\Users\Public")
+        return Path(public) / "proFetch"
+    # Fallback for non-Windows (dev/test)
+    import platformdirs
+    return Path(platformdirs.user_data_dir("proFetch"))
+
+
+def get_db_path() -> Path:
+    return get_data_dir() / "profetch.db"
+
+
+def ensure_data_dir() -> Path:
+    data_dir = get_data_dir()
+    data_dir.mkdir(parents=True, exist_ok=True)
+
+    settings_path = data_dir / "settings.toml"
+    if not settings_path.exists():
+        # Try to copy from the package-adjacent settings.toml first
+        bundled = Path(__file__).parent.parent.parent / "settings.toml"
+        if bundled.exists():
+            shutil.copy2(bundled, settings_path)
+        else:
+            settings_path.write_text(_DEFAULT_SETTINGS, encoding="utf-8")
+
+    return data_dir
+
+
+def load_settings():
+    from dynaconf import Dynaconf
+
+    data_dir = ensure_data_dir()
+    return Dynaconf(
+        envvar_prefix="PROFETCH",
+        settings_files=[
+            str(data_dir / "settings.toml"),
+            str(data_dir / "settings.local.toml"),
+        ],
+        merge_enabled=True,
+    )

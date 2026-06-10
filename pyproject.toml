@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "profetch"
+dynamic = ["version"]
+description = "EQProfusion component patcher and updater"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "httpx>=0.25",
+    "aiofiles>=23.0",
+    "aiosqlite>=0.19",
+    "dynaconf>=3.2",
+    "rich>=13.0",
+    "typer>=0.9",
+    "platformdirs>=3.0",
+    "packaging>=23.0",
+]
+
+[project.scripts]
+profetch = "profetch.main:main"
+
+[tool.hatch.version]
+path = "src/profetch/__about__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/profetch"]

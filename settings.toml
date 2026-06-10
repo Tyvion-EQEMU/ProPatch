@@ -1,0 +1,11 @@
+[paths]
+mq_rekkas = "C:\\Games\\MQ-Rekka"
+
+[components]
+rekkas_mq = true
+mq2rwarp = true
+rgmercs = true
+e9loot = true
+
+[protected]
+always = ["config/*", "MacroQuest.ini"]
