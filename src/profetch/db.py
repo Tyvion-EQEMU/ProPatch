@@ -15,6 +15,13 @@ async def init_db(db_path: Path) -> None:
                 installed_at TEXT NOT NULL
             )
         """)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS eq_file_versions (
+                file_id      TEXT PRIMARY KEY,
+                version      TEXT NOT NULL,
+                installed_at TEXT NOT NULL
+            )
+        """)
         await conn.commit()
 
 
@@ -47,6 +54,38 @@ async def get_all_versions(db_path: Path) -> dict[str, str]:
     async with aiosqlite.connect(db_path) as conn:
         cur = await conn.execute(
             "SELECT component_id, version FROM installed_versions"
+        )
+        rows = await cur.fetchall()
+        return {row[0]: row[1] for row in rows}
+
+
+async def get_eq_file_version(db_path: Path, file_id: str) -> str | None:
+    async with aiosqlite.connect(db_path) as conn:
+        cur = await conn.execute(
+            "SELECT version FROM eq_file_versions WHERE file_id = ?",
+            (file_id,),
+        )
+        row = await cur.fetchone()
+        return row[0] if row else None
+
+
+async def set_eq_file_version(db_path: Path, file_id: str, version: str) -> None:
+    now = datetime.now(timezone.utc).isoformat()
+    async with aiosqlite.connect(db_path) as conn:
+        await conn.execute(
+            """
+            INSERT OR REPLACE INTO eq_file_versions (file_id, version, installed_at)
+            VALUES (?, ?, ?)
+            """,
+            (file_id, version, now),
+        )
+        await conn.commit()
+
+
+async def get_all_eq_versions(db_path: Path) -> dict[str, str]:
+    async with aiosqlite.connect(db_path) as conn:
+        cur = await conn.execute(
+            "SELECT file_id, version FROM eq_file_versions"
         )
         rows = await cur.fetchall()
         return {row[0]: row[1] for row in rows}

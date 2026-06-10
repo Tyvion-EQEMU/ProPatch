@@ -24,6 +24,21 @@ class Component:
     zip_subdir: str | None = None  # extract only this subdir from the zip (strips its prefix)
 
 
+@dataclass
+class EqFile:
+    id: str
+    name: str
+    filename: str        # target filename on disk; "" for zip packs
+    url: str             # direct download URL; "" for GitHub-sourced
+    destination: str     # relative to each EQ dir; "" = root
+    owner: str | None = None
+    repo: str | None = None
+    branch: str | None = None
+    tracking: TrackingMethod | None = None  # None = always re-download
+    extract: bool = False  # True = downloaded file is a zip to be extracted
+
+
+# Hardcoded fallback — used if the manifest cannot be fetched
 COMPONENTS: dict[str, Component] = {
     "rekkas_mq": Component(
         id="rekkas_mq",

@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import os
 import shutil
+import sys
 from pathlib import Path
 
 _DEFAULT_SETTINGS = """\
 [paths]
 mq_rekkas = "C:\\\\Games\\\\MQ-Rekka"
+eq_dirs = []
 
 [components]
 rekkas_mq = true
@@ -20,12 +22,18 @@ always = ["config/*", "MacroQuest.ini"]
 
 
 def get_data_dir() -> Path:
+    # When packaged as a PyInstaller exe, store data next to the executable
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).parent / "proFetch"
+
+    # Dev / editable install — use a separate dev directory so test data
+    # never collides with a real production install
     if os.name == "nt":
         public = os.environ.get("PUBLIC", r"C:\Users\Public")
-        return Path(public) / "proFetch"
-    # Fallback for non-Windows (dev/test)
+        return Path(public) / "proFetch-dev"
+
     import platformdirs
-    return Path(platformdirs.user_data_dir("proFetch"))
+    return Path(platformdirs.user_data_dir("proFetch-dev"))
 
 
 def get_db_path() -> Path:
@@ -38,7 +46,6 @@ def ensure_data_dir() -> Path:
 
     settings_path = data_dir / "settings.toml"
     if not settings_path.exists():
-        # Try to copy from the package-adjacent settings.toml first
         bundled = Path(__file__).parent.parent.parent / "settings.toml"
         if bundled.exists():
             shutil.copy2(bundled, settings_path)

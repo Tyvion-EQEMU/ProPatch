@@ -1,5 +1,6 @@
 [paths]
 mq_rekkas = "C:\\Games\\MQ-Rekka"
+eq_dirs = []
 
 [components]
 rekkas_mq = true

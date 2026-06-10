@@ -36,11 +36,15 @@ def _short(version: str | None) -> str:
 def print_update_result(result: dict) -> None:
     name = result["name"]
     status = result.get("status")
+
+    if result.get("kind") == "eq_file":
+        _print_eq_result(result)
+        return
+
     old = _short(result.get("old_version"))
     new = _short(result.get("new_version"))
     written = result.get("written", 0)
     skipped = result.get("skipped", 0)
-
     files_note = f"({written} files" + (f", {skipped} skipped)" if skipped else ")")
 
     if status == "current":
@@ -56,6 +60,31 @@ def print_update_result(result: dict) -> None:
                 f"  [green]✓[/green] [white]{name}[/white]  "
                 f"[dim]{old}[/dim] → [cyan]{new}[/cyan]  [dim]{files_note}[/dim]"
             )
+    elif status == "error":
+        console.print(
+            f"  [bold red]✗[/bold red] [white]{name}[/white]  "
+            f"[red]{result.get('error', 'unknown error')}[/red]"
+        )
+
+
+def _print_eq_result(result: dict) -> None:
+    name = result["name"]
+    status = result.get("status")
+    written = result.get("written", 0)
+    dirs = result.get("dirs", 0)
+
+    if status == "current":
+        console.print(f"  [green]✓[/green] [white]{name}[/white]  [dim]up to date[/dim]")
+    elif status == "updated":
+        loc = f"{dirs} dir{'s' if dirs != 1 else ''}" if dirs else f"{written} files"
+        console.print(
+            f"  [green]✓[/green] [white]{name}[/white]  "
+            f"[dim]installed →[/dim] [cyan]{loc}[/cyan]"
+        )
+    elif status == "skipped":
+        console.print(
+            f"  [dim]– {name}  {result.get('error', 'skipped')}[/dim]"
+        )
     elif status == "error":
         console.print(
             f"  [bold red]✗[/bold red] [white]{name}[/white]  "
