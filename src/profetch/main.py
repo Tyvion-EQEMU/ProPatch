@@ -118,10 +118,16 @@ async def _status_async(db_path: Path, settings) -> None:
         components, eq_files = await _load_manifest(client)
 
     enabled = _enabled_components(settings, components)
+    try:
+        mq_rekkas = Path(settings.PATHS.mq_rekkas)
+    except Exception:
+        mq_rekkas = None
+    eq_dirs = _get_eq_dirs(settings)
+
     with ui.console.status("[dim]Checking for updates...[/dim]"):
         mq_statuses, eq_statuses = await asyncio.gather(
-            updater.get_all_statuses(db_path, enabled, components),
-            updater.get_eq_file_statuses(db_path, eq_files),
+            updater.get_all_statuses(db_path, enabled, components, mq_rekkas),
+            updater.get_eq_file_statuses(db_path, eq_files, eq_dirs),
         )
     table = ui.build_status_table(mq_statuses, eq_statuses)
     ui.console.print(table)
@@ -140,6 +146,8 @@ async def _status_async(db_path: Path, settings) -> None:
             log.info(f"  {name}: update available ({ui._short(s.get('installed'))} -> {ui._short(s.get('remote'))}{vtag})")
         elif code == "not_installed":
             log.info(f"  {name}: not installed")
+        elif code == "untracked":
+            log.info(f"  {name}: untracked (files on disk, not in database)")
         elif code == "error":
             log.warning(f"  {name}: error — {s.get('error')}")
 
@@ -240,13 +248,13 @@ async def _update_async(
         eq_to_check = eq_files if (include_eq and eq_dirs) else []
         with ui.console.status("[dim]Checking for updates...[/dim]"):
             mq_statuses, eq_statuses = await asyncio.gather(
-                updater.get_all_statuses(db_path, cids, components),
-                updater.get_eq_file_statuses(db_path, eq_to_check),
+                updater.get_all_statuses(db_path, cids, components, mq_rekkas),
+                updater.get_eq_file_statuses(db_path, eq_to_check, eq_dirs),
             )
 
         needs_update_ids = {
             s["id"] for s in mq_statuses + eq_statuses
-            if s["status"] in ("not_installed", "update_available")
+            if s["status"] in ("not_installed", "update_available", "untracked")
         }
 
         log = plog.get()
@@ -256,7 +264,7 @@ async def _update_async(
             name = s["name"]
             if code == "current":
                 log.info(f"  {name}: current ({ui._short(s.get('installed'))})")
-            elif code in ("not_installed", "update_available"):
+            elif code in ("not_installed", "update_available", "untracked"):
                 log.info(f"  {name}: {code.replace('_', ' ')}")
             elif code == "error":
                 log.warning(f"  {name}: error — {s.get('error')}")

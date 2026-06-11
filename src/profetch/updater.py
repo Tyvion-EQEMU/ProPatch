@@ -22,12 +22,26 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
+def _is_on_disk(component: Component, mq_rekkas: Path) -> bool:
+    """Check whether a component's files appear to be present on disk."""
+    if not mq_rekkas.exists():
+        return False
+    dest = mq_rekkas / component.destination if component.destination else mq_rekkas
+    if component.release_asset_name:
+        return (dest / component.release_asset_name).exists()
+    elif component.destination:
+        return dest.is_dir() and any(dest.iterdir())
+    else:
+        return dest.is_dir() and any(dest.iterdir())
+
+
 # ── Status checks (used by `profetch status`) ────────────────────────────────
 
 async def _check_one(
     client: httpx.AsyncClient,
     component: Component,
     installed_version: str | None,
+    mq_rekkas: Path | None = None,
 ) -> dict:
     version_tag = None
     try:
@@ -67,7 +81,10 @@ async def _check_one(
         }
 
     if installed_version is None:
-        status = "not_installed"
+        if mq_rekkas and _is_on_disk(component, mq_rekkas):
+            status = "untracked"
+        else:
+            status = "not_installed"
     elif installed_version == remote:
         status = "current"
     else:
@@ -130,7 +147,9 @@ async def _check_eq_one(
 
 
 async def get_all_statuses(
-    db_path: Path, enabled_ids: list[str], components: dict[str, Component] | None = None
+    db_path: Path, enabled_ids: list[str],
+    components: dict[str, Component] | None = None,
+    mq_rekkas: Path | None = None,
 ) -> list[dict]:
     if components is None:
         components = COMPONENTS
@@ -138,7 +157,7 @@ async def get_all_statuses(
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         tasks = [
-            _check_one(client, components[cid], installed.get(cid))
+            _check_one(client, components[cid], installed.get(cid), mq_rekkas)
             for cid in enabled_ids
             if cid in components
         ]
@@ -148,9 +167,23 @@ async def get_all_statuses(
 
 
 async def get_eq_file_statuses(
-    db_path: Path, eq_files: list[EqFile]
+    db_path: Path, eq_files: list[EqFile],
+    eq_dirs: list[Path] | None = None,
 ) -> list[dict]:
     installed = await db.get_all_eq_versions(db_path)
+
+    # Scan disk for EQ files present but not in the database
+    if eq_dirs:
+        for ef in eq_files:
+            if ef.id not in installed and ef.filename:
+                for eq_dir in eq_dirs:
+                    dest_dir = eq_dir / ef.destination if ef.destination else eq_dir
+                    file_path = dest_dir / ef.filename
+                    if file_path.exists():
+                        on_disk_hash = _sha256(file_path)
+                        await db.set_eq_file_version(db_path, ef.id, on_disk_hash)
+                        installed[ef.id] = on_disk_hash
+                        break
 
     timeout = httpx.Timeout(connect=30.0, read=120.0, write=None, pool=30.0)
     async with httpx.AsyncClient(timeout=timeout) as client:

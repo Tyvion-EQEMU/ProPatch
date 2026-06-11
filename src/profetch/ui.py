@@ -110,6 +110,9 @@ def _status_row(table: Table, s: dict) -> None:
     elif code == "not_installed":
         status_text = Text("✗ Not Installed", style="red")
         installed_display = Text("—", style="dim")
+    elif code == "untracked":
+        status_text = Text("? Untracked", style="yellow")
+        installed_display = Text("on disk", style="dim")
     elif code == "error":
         status_text = Text(f"! Error: {s.get('error', '')[:40]}", style="red")
     else:
@@ -139,11 +142,14 @@ def build_status_table(mq_statuses: list[dict], eq_statuses: list[dict]) -> Tabl
 
 def print_preflight(items: list[dict]) -> None:
     n = len(items)
-    console.print(f"  [bold]{n} update{'s' if n != 1 else ''} available:[/bold]\n")
+    console.print(f"  [bold]{n} item{'s' if n != 1 else ''} to install/update:[/bold]\n")
     for s in items:
         name = s["name"]
         if s["status"] == "not_installed":
             console.print(f"    [red]✗[/red] {name}  [dim]not installed[/dim]")
+        elif s["status"] == "untracked":
+            rem = _short(s.get("remote"))
+            console.print(f"    [yellow]?[/yellow] {name}  [dim]on disk, untracked → will sync to[/dim] [cyan]{rem}[/cyan]")
         else:
             inst = _short(s.get("installed"))
             rem = _short(s.get("remote"))
