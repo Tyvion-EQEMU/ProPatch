@@ -52,6 +52,7 @@ COMPONENTS: dict[str, Component] = {
         destination="",
         protected_patterns=["config/*", "MacroQuest.ini"],
         enabled_key="rekkas_mq",
+        show_version=True,
     ),
     "mq2rwarp": Component(
         id="mq2rwarp",
@@ -75,6 +76,7 @@ COMPONENTS: dict[str, Component] = {
         destination="lua/rgmercs",
         protected_patterns=["config/*"],
         enabled_key="rgmercs",
+        show_version=True,
     ),
     "proloot": Component(
         id="proloot",

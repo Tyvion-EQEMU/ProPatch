@@ -100,7 +100,8 @@ def _status_row(table: Table, s: dict) -> None:
     remote_raw = s.get("remote")
     remote_display = _short(remote_raw) if remote_raw is not None else Text("—", style="dim")
     version_tag = s.get("version_tag")
-    version_display = Text(version_tag, style="cyan") if version_tag else Text("—", style="dim")
+    redundant = version_tag and version_tag == s.get("remote")
+    version_display = Text(version_tag, style="cyan") if (version_tag and not redundant) else Text("—", style="dim")
 
     if code == "current":
         status_text = Text("✓ Current", style="green")
