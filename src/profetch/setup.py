@@ -18,7 +18,7 @@ def maybe_run_install_wizard() -> None:
     if not getattr(sys, "frozen", False):
         return
 
-    data_dir = Path(sys.executable).parent / "proFetch"
+    data_dir = Path(sys.executable).parent
     if (data_dir / "settings.toml").exists():
         return  # already installed here — normal run
 
@@ -63,7 +63,7 @@ def _run_install_wizard() -> None:
     ui.console.print()
 
     # ── Create directories ────────────────────────────────────────────────────
-    data_dir = install_dir / "proFetch"
+    data_dir = install_dir
     try:
         data_dir.mkdir(parents=True, exist_ok=True)
     except OSError as exc:
@@ -96,10 +96,10 @@ def _prompt_paths() -> tuple[str, list[tuple[str, str]]]:
 
     # MQ Patch
     ui.console.print(
-        "  [dim]MQ Patch — root folder of the Rekkas MQ install (e.g. C:\\Games\\MQ-Rekkas)[/dim]"
+        "  [dim]MQ Install — root folder of the Rekkas MQ install (e.g. C:\\Games\\MQ-Rekkas)[/dim]"
     )
     mq_rekkas = Prompt.ask(
-        "  MQ Patch", default=r"C:\Games\MQ-Rekkas", console=ui.console
+        "  MQ Install", default=r"C:\Games\MQ-Rekkas", console=ui.console
     )
 
     # EQ directories
@@ -147,18 +147,23 @@ def _prompt_paths() -> tuple[str, list[tuple[str, str]]]:
     return mq_rekkas, eq_instances
 
 
+def _toml_str(value: str) -> str:
+    """Escape a string for use inside a TOML double-quoted value."""
+    return value.replace("\\", "\\\\")
+
+
 def _write_settings_local(
     data_dir: Path, mq_rekkas: str, eq_instances: list[tuple[str, str]]
 ) -> None:
-    lines = ["[paths]", f'mq_rekkas = "{mq_rekkas}"']
+    lines = ["[paths]", f'mq_rekkas = "{_toml_str(mq_rekkas)}"']
 
     if eq_instances:
-        paths_toml = ", ".join(f'"{inst[0]}"' for inst in eq_instances)
+        paths_toml = ", ".join(f'"{_toml_str(inst[0])}"' for inst in eq_instances)
         lines.append(f"eq_dirs = [{paths_toml}]")
 
         names = [inst[1] for inst in eq_instances]
         if any(names):
-            names_toml = ", ".join(f'"{n}"' for n in names)
+            names_toml = ", ".join(f'"{_toml_str(n)}"' for n in names)
             lines.append(f"eq_dir_names = [{names_toml}]")
 
     (data_dir / "settings.local.toml").write_text(

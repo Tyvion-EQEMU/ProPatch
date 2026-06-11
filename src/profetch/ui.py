@@ -153,13 +153,13 @@ def print_config_section(config_info: dict) -> None:
     t.add_column("Value", no_wrap=True)
     t.add_column("Status", no_wrap=True)
 
-    # MQ Patch path
+    # MQ Install path
     mq = config_info["mq_rekkas"]
     if mq["path"] is None:
-        t.add_row("MQ Patch", Text("Not configured", style="red"), Text("✗", style="red"))
+        t.add_row("MQ Install", Text("Not configured", style="red"), Text("✗", style="red"))
     else:
         icon = Text("✓", style="green") if mq["exists"] else Text("✗ Path not found", style="red")
-        t.add_row("MQ Patch", str(mq["path"]), icon)
+        t.add_row("MQ Install", str(mq["path"]), icon)
 
     # EQ dirs
     eq_dirs = config_info["eq_dirs"]

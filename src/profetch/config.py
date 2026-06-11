@@ -22,9 +22,9 @@ always = ["config/*", "MacroQuest.ini"]
 
 
 def get_data_dir() -> Path:
-    # When packaged as a PyInstaller exe, store data next to the executable
+    # When packaged as a PyInstaller exe, data lives in the same folder as the exe
     if getattr(sys, "frozen", False):
-        return Path(sys.executable).parent / "proFetch"
+        return Path(sys.executable).parent
 
     # Dev / editable install — use a separate dev directory so test data
     # never collides with a real production install
