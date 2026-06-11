@@ -133,6 +133,20 @@ def build_status_table(mq_statuses: list[dict], eq_statuses: list[dict]) -> Tabl
     return table
 
 
+def print_preflight(items: list[dict]) -> None:
+    n = len(items)
+    console.print(f"  [bold]{n} update{'s' if n != 1 else ''} available:[/bold]\n")
+    for s in items:
+        name = s["name"]
+        if s["status"] == "not_installed":
+            console.print(f"    [red]✗[/red] {name}  [dim]not installed[/dim]")
+        else:
+            inst = _short(s.get("installed"))
+            rem = _short(s.get("remote"))
+            console.print(f"    [yellow]↑[/yellow] {name}  [dim]{inst} →[/dim] [cyan]{rem}[/cyan]")
+    console.print()
+
+
 def print_setup_reminder() -> None:
     console.print()
     console.print(

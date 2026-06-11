@@ -203,10 +203,36 @@ async def _update_async(
                 cids = [cid for cid in component_ids if cid in COMPONENTS]
                 components = {**components, **{c: COMPONENTS[c] for c in cids}}
 
+        # ── Pre-flight check ─────────────────────────────────────────────────
+        eq_to_check = eq_files if (include_eq and eq_dirs) else []
+        with ui.console.status("[dim]Checking for updates...[/dim]"):
+            mq_statuses, eq_statuses = await asyncio.gather(
+                updater.get_all_statuses(db_path, cids, components),
+                updater.get_eq_file_statuses(db_path, eq_to_check),
+            )
+
+        needs_update_ids = {
+            s["id"] for s in mq_statuses + eq_statuses
+            if s["status"] in ("not_installed", "update_available")
+        }
+
+        if not needs_update_ids:
+            ui.console.print("  [green]Everything is up to date.[/green]")
+            ui.print_setup_reminder()
+            return
+
+        ui.print_preflight([s for s in mq_statuses + eq_statuses if s["id"] in needs_update_ids])
+        typer.confirm("  Proceed?", default=True, abort=True)
+        ui.console.print()
+
+        # ── Apply updates ─────────────────────────────────────────────────────
+        cids_to_update = [cid for cid in cids if cid in needs_update_ids]
+        eq_files_to_update = [ef for ef in eq_files if ef.id in needs_update_ids]
+
         installed = await db.get_all_versions(db_path)
 
         with ui.console.status("") as spinner:
-            for cid in cids:
+            for cid in cids_to_update:
                 if cid not in components:
                     continue
                 comp = components[cid]
@@ -227,11 +253,11 @@ async def _update_async(
                 else:
                     errors += 1
 
-            if include_eq and eq_files:
+            if include_eq and eq_files_to_update:
                 ui.console.print()
                 eq_installed = await db.get_all_eq_versions(db_path)
-                for ef in eq_files:
-                    spinner.update(f"  [dim]{ef.name}[/dim]  Checking...")
+                for ef in eq_files_to_update:
+                    spinner.update(f"  [dim]{ef.name}[/dim]  Downloading...")
                     result = await updater.update_eq_file(
                         client, ef, eq_dirs, db_path, eq_installed.get(ef.id),
                         on_downloading=lambda f=ef: spinner.update(
@@ -245,8 +271,6 @@ async def _update_async(
                         current += 1
                     elif result["status"] not in ("skipped",):
                         errors += 1
-            elif include_eq and not eq_files:
-                pass  # manifest had no eq_files; nothing to do
 
     parts = []
     if updated:
