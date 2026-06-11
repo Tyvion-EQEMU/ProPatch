@@ -116,7 +116,11 @@ def _status_row(table: Table, s: dict) -> None:
         status_text = Text("? Untracked", style="yellow")
         installed_display = Text("on disk", style="dim")
     elif code == "error":
-        status_text = Text(f"! Error: {s.get('error', '')[:40]}", style="red")
+        err = s.get("error", "")
+        if "rate limit" in err.lower():
+            status_text = Text("! Rate limited (add github_token)", style="red")
+        else:
+            status_text = Text(f"! {err[:45]}", style="red")
     else:
         status_text = Text("? Unknown", style="dim")
 

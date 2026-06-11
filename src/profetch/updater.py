@@ -150,12 +150,13 @@ async def get_all_statuses(
     db_path: Path, enabled_ids: list[str],
     components: dict[str, Component] | None = None,
     mq_rekkas: Path | None = None,
+    github_token: str | None = None,
 ) -> list[dict]:
     if components is None:
         components = COMPONENTS
     installed = await db.get_all_versions(db_path)
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    async with httpx.AsyncClient(timeout=30.0, headers=github.auth_headers(github_token)) as client:
         tasks = [
             _check_one(client, components[cid], installed.get(cid), mq_rekkas)
             for cid in enabled_ids
@@ -169,6 +170,7 @@ async def get_all_statuses(
 async def get_eq_file_statuses(
     db_path: Path, eq_files: list[EqFile],
     eq_dirs: list[Path] | None = None,
+    github_token: str | None = None,
 ) -> list[dict]:
     installed = await db.get_all_eq_versions(db_path)
 
@@ -186,7 +188,7 @@ async def get_eq_file_statuses(
                         break
 
     timeout = httpx.Timeout(connect=30.0, read=120.0, write=None, pool=30.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=timeout, headers=github.auth_headers(github_token)) as client:
         tasks = [
             _check_eq_one(client, ef, installed.get(ef.id))
             for ef in eq_files

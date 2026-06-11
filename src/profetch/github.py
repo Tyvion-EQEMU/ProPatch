@@ -8,12 +8,30 @@ GITHUB_API = "https://api.github.com"
 _HEADERS = {"Accept": "application/vnd.github.v3+json"}
 
 
+def auth_headers(token: str | None = None) -> dict:
+    h = dict(_HEADERS)
+    if token:
+        h["Authorization"] = f"Bearer {token}"
+    return h
+
+
+def _raise_for_status(r) -> None:
+    if r.status_code == 403:
+        body = r.text.lower()
+        if "rate limit" in body or "rate limit" in r.headers.get("x-ratelimit-remaining", ""):
+            raise RuntimeError(
+                "GitHub API rate limit exceeded. Add a github_token to settings.local.toml "
+                "to raise the limit from 60 to 5000 requests/hour."
+            )
+    r.raise_for_status()
+
+
 async def get_latest_commit_sha(
     client: httpx.AsyncClient, owner: str, repo: str, branch: str = "main"
 ) -> str:
     url = f"{GITHUB_API}/repos/{owner}/{repo}/commits/{branch}"
     r = await client.get(url, headers=_HEADERS)
-    r.raise_for_status()
+    _raise_for_status(r)
     return r.json()["sha"]
 
 
@@ -22,7 +40,7 @@ async def get_latest_release(
 ) -> dict:
     url = f"{GITHUB_API}/repos/{owner}/{repo}/releases/latest"
     r = await client.get(url, headers=_HEADERS)
-    r.raise_for_status()
+    _raise_for_status(r)
     return r.json()
 
 
@@ -31,7 +49,7 @@ async def get_latest_tag(
 ) -> str | None:
     url = f"{GITHUB_API}/repos/{owner}/{repo}/tags"
     r = await client.get(url, headers=_HEADERS)
-    r.raise_for_status()
+    _raise_for_status(r)
     tags = r.json()
     return tags[0]["name"] if tags else None
 
@@ -45,6 +63,7 @@ async def get_latest_version_tag(
         r = await client.get(url, headers=_HEADERS)
         if r.status_code == 200:
             return r.json()["tag_name"]
+        _raise_for_status(r)
     except Exception:
         pass
     try:

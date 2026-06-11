@@ -113,8 +113,10 @@ async def _status_async(db_path: Path, settings) -> None:
     await db.init_db(db_path)
     ui.print_header(__version__)
 
+    github_token = config.get_github_token(settings)
     timeout = httpx.Timeout(connect=30.0, read=60.0, write=None, pool=30.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    from profetch import github as gh
+    async with httpx.AsyncClient(timeout=timeout, headers=gh.auth_headers(github_token)) as client:
         components, eq_files = await _load_manifest(client)
 
     enabled = _enabled_components(settings, components)
@@ -126,8 +128,8 @@ async def _status_async(db_path: Path, settings) -> None:
 
     with ui.console.status("[dim]Checking for updates...[/dim]"):
         mq_statuses, eq_statuses = await asyncio.gather(
-            updater.get_all_statuses(db_path, enabled, components, mq_rekkas),
-            updater.get_eq_file_statuses(db_path, eq_files, eq_dirs),
+            updater.get_all_statuses(db_path, enabled, components, mq_rekkas, github_token),
+            updater.get_eq_file_statuses(db_path, eq_files, eq_dirs, github_token),
         )
     table = ui.build_status_table(mq_statuses, eq_statuses)
     ui.console.print(table)
@@ -231,10 +233,12 @@ async def _update_async(
     await db.init_db(db_path)
     ui.print_header(__version__)
 
+    github_token = config.get_github_token(settings)
+    from profetch import github as gh
     timeout = httpx.Timeout(connect=30.0, read=None, write=None, pool=30.0)
     updated = current = errors = 0
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=timeout, headers=gh.auth_headers(github_token)) as client:
         components, eq_files = await _load_manifest(client)
 
         # Resolve component list
@@ -251,8 +255,8 @@ async def _update_async(
         eq_to_check = eq_files if (include_eq and eq_dirs) else []
         with ui.console.status("[dim]Checking for updates...[/dim]"):
             mq_statuses, eq_statuses = await asyncio.gather(
-                updater.get_all_statuses(db_path, cids, components, mq_rekkas),
-                updater.get_eq_file_statuses(db_path, eq_to_check, eq_dirs),
+                updater.get_all_statuses(db_path, cids, components, mq_rekkas, github_token),
+                updater.get_eq_file_statuses(db_path, eq_to_check, eq_dirs, github_token),
             )
 
         needs_update_ids = {
@@ -406,8 +410,10 @@ def components():
 async def _components_async(settings) -> None:
     ui.print_header(__version__)
 
+    github_token = config.get_github_token(settings)
+    from profetch import github as gh
     timeout = httpx.Timeout(connect=30.0, read=60.0, write=None, pool=30.0)
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=timeout, headers=gh.auth_headers(github_token)) as client:
         all_components, _ = await _load_manifest(client)
 
     cid_list = list(all_components.keys())

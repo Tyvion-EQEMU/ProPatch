@@ -11,6 +11,11 @@ _DEFAULT_SETTINGS = """\
 mq_rekkas = "C:\\\\Games\\\\MQ-Rekkas"
 eq_dirs = []
 
+# Optional: GitHub Personal Access Token
+# Raises the API rate limit from 60 to 5000 requests/hour.
+# Create one at https://github.com/settings/tokens (no scopes needed for public repos)
+# github_token = "ghp_..."
+
 [components]
 rekkas_mq = true
 mq2rwarp = true
@@ -54,6 +59,14 @@ def ensure_data_dir() -> Path:
             settings_path.write_text(_DEFAULT_SETTINGS, encoding="utf-8")
 
     return data_dir
+
+
+def get_github_token(settings) -> str | None:
+    try:
+        val = settings.get("github_token", default=None)
+        return str(val).strip() or None if val else None
+    except Exception:
+        return None
 
 
 def save_component_settings(data_dir: Path, component_states: dict[str, bool]) -> None:
