@@ -14,7 +14,7 @@ console = Console(legacy_windows=False)
 
 def print_header(version: str) -> None:
     console.print(
-        f"\n[bold cyan]proFetch v{version}[/bold cyan] — EQProfusion Component Manager\n"
+        f"\n[bold cyan]ProFetch v{version}[/bold cyan] — EQProfusion Component Manager\n"
     )
 
 

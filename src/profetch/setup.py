@@ -10,7 +10,7 @@ from profetch import ui
 from profetch.config import _DEFAULT_SETTINGS
 
 
-_DEFAULT_INSTALL_DIR = r"C:\Games\proFetch"
+_DEFAULT_INSTALL_DIR = r"C:\Games\ProFetch"
 
 
 def maybe_run_install_wizard() -> None:
@@ -32,7 +32,7 @@ def maybe_run_install_wizard() -> None:
 def run_setup(data_dir: Path) -> None:
     """Re-run path configuration — called by the 'profetch setup' command."""
     ui.console.print()
-    ui.console.print("[bold cyan]  proFetch — Reconfigure Paths[/bold cyan]")
+    ui.console.print("[bold cyan]  ProFetch — Reconfigure Paths[/bold cyan]")
     ui.console.print()
     try:
         mq_rekkas, eq_instances = _prompt_paths()
@@ -47,9 +47,9 @@ def run_setup(data_dir: Path) -> None:
 
 def _run_install_wizard() -> None:
     ui.console.print()
-    ui.console.print("[bold cyan]  proFetch — First-Time Setup[/bold cyan]")
+    ui.console.print("[bold cyan]  ProFetch — First-Time Setup[/bold cyan]")
     ui.console.print(
-        "  [dim]proFetch will copy itself to a permanent location and configure your paths.[/dim]"
+        "  [dim]ProFetch will copy itself to a permanent location and configure your paths.[/dim]"
     )
     ui.console.print()
 
@@ -88,7 +88,7 @@ def _run_install_wizard() -> None:
     ui.console.print(f"[green]✓[/green] Installed to:  [bold]{dest_exe}[/bold]")
     ui.console.print(f"[green]✓[/green] Settings in:   [bold]{data_dir}[/bold]")
     ui.console.print()
-    ui.console.print("  Run proFetch from its new location:")
+    ui.console.print("  Run ProFetch from its new location:")
     ui.console.print(f"  [bold cyan]{dest_exe}[/bold cyan]")
     ui.print_setup_reminder()
 

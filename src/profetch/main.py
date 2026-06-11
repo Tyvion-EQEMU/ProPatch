@@ -34,7 +34,7 @@ _ALIASES: dict[str, str] = {
 
 app = typer.Typer(
     name="profetch",
-    help="proFetch — EQProfusion Component Manager",
+    help="ProFetch — EQProfusion Component Manager",
     no_args_is_help=True,
 )
 
@@ -333,7 +333,7 @@ async def _update_eq_async(db_path: Path, eq_dirs: list[Path]) -> None:
 
 @app.command()
 def setup():
-    """Reconfigure proFetch paths and settings."""
+    """Reconfigure ProFetch paths and settings."""
     from profetch.setup import run_setup
     config.ensure_data_dir()
     run_setup(config.get_data_dir())
@@ -341,8 +341,8 @@ def setup():
 
 @app.command()
 def version():
-    """Show proFetch version."""
-    typer.echo(f"proFetch v{__version__}")
+    """Show ProFetch version."""
+    typer.echo(f"ProFetch v{__version__}")
 
 
 def main() -> None:
