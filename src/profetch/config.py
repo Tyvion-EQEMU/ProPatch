@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -53,6 +54,22 @@ def ensure_data_dir() -> Path:
             settings_path.write_text(_DEFAULT_SETTINGS, encoding="utf-8")
 
     return data_dir
+
+
+def save_component_settings(data_dir: Path, component_states: dict[str, bool]) -> None:
+    """Write [components] block to settings.local.toml without touching other sections."""
+    settings_path = data_dir / "settings.local.toml"
+    content = settings_path.read_text(encoding="utf-8") if settings_path.exists() else ""
+
+    block_lines = ["[components]"]
+    for cid, enabled in component_states.items():
+        block_lines.append(f"{cid} = {'true' if enabled else 'false'}")
+    new_block = "\n".join(block_lines)
+
+    # Strip existing [components] section (up to next section header or EOF)
+    cleaned = re.sub(r"\[components\].*?(?=\n\[|\Z)", "", content, flags=re.DOTALL).rstrip()
+    content = (cleaned + "\n\n" + new_block + "\n") if cleaned else (new_block + "\n")
+    settings_path.write_text(content, encoding="utf-8")
 
 
 def load_settings():

@@ -5,7 +5,9 @@ a = Analysis(
     ['src/profetch/main.py'],
     pathex=['src'],
     binaries=[],
-    datas=[],
+    datas=[
+        ('assets/profusion_logo_64x64.png', '.'),
+    ],
     hiddenimports=[
         # tomli is imported conditionally (Python < 3.11) inside manifest.py
         'tomli',
@@ -44,4 +46,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='assets/profusion_logo.ico',
 )

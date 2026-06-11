@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import base64
+import os
+import sys
 from pathlib import Path
 
 from rich import box
@@ -12,7 +15,30 @@ from rich.text import Text
 console = Console(legacy_windows=False)
 
 
+def _assets_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        # One-file PyInstaller build extracts bundled data to _MEIPASS at runtime
+        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+    return Path(__file__).parent.parent.parent / "assets"
+
+
+def print_logo() -> None:
+    """Render the ProFusion logo inline when running in Windows Terminal."""
+    if not os.environ.get("WT_SESSION"):
+        return
+    img_path = _assets_dir() / "profusion_logo_64x64.png"
+    if not img_path.exists():
+        return
+    try:
+        data = base64.b64encode(img_path.read_bytes()).decode()
+        # iTerm2 inline image protocol — supported by Windows Terminal 1.9+
+        print(f"\033]1337;File=inline=1;width=64px;height=64px;preserveAspectRatio=1:{data}\a")
+    except Exception:
+        pass
+
+
 def print_header(version: str) -> None:
+    print_logo()
     console.print(
         f"\n[bold cyan]ProFetch v{version}[/bold cyan] — EQProfusion Component Manager\n"
     )

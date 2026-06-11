@@ -395,6 +395,63 @@ async def _update_eq_async(db_path: Path, eq_dirs: list[Path]) -> None:
 
 
 @app.command()
+def components():
+    """Interactively enable or disable managed components."""
+    settings = config.load_settings()
+    config.ensure_data_dir()
+    plog.setup(config.get_data_dir() / "profetch.log")
+    asyncio.run(_components_async(settings))
+
+
+async def _components_async(settings) -> None:
+    ui.print_header(__version__)
+
+    timeout = httpx.Timeout(connect=30.0, read=60.0, write=None, pool=30.0)
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        all_components, _ = await _load_manifest(client)
+
+    cid_list = list(all_components.keys())
+
+    # Read current enabled state
+    enabled: dict[str, bool] = {}
+    for cid in cid_list:
+        try:
+            enabled[cid] = bool(settings.get(f"COMPONENTS.{cid}", default=True))
+        except Exception:
+            enabled[cid] = True
+
+    ui.console.print("  [bold]Component Selection[/bold]\n")
+    ui.console.print("  Enter a number to toggle a component on or off.\n"
+                     "  Press Enter with no input to save and exit.\n")
+
+    while True:
+        for i, cid in enumerate(cid_list, 1):
+            comp = all_components[cid]
+            check = "[green]✓[/green]" if enabled[cid] else "[dim] [/dim]"
+            ui.console.print(f"    [{i}] {check}  {comp.name}")
+        ui.console.print()
+
+        raw = typer.prompt("  Toggle", default="", show_default=False)
+        ui.console.print()
+
+        if not raw.strip():
+            break
+
+        try:
+            idx = int(raw.strip()) - 1
+            if 0 <= idx < len(cid_list):
+                cid = cid_list[idx]
+                enabled[cid] = not enabled[cid]
+            else:
+                ui.console.print(f"  [red]Enter a number between 1 and {len(cid_list)}[/red]\n")
+        except ValueError:
+            ui.console.print("  [red]Please enter a number.[/red]\n")
+
+    config.save_component_settings(config.get_data_dir(), enabled)
+    ui.console.print("  [green]Saved.[/green] Run [bold white]profetch status[/bold white] to verify.\n")
+
+
+@app.command()
 def setup():
     """Reconfigure ProFetch paths and settings."""
     from profetch.setup import run_setup
