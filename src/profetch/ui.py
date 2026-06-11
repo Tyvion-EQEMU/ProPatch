@@ -51,6 +51,11 @@ def print_update_result(result: dict) -> None:
 
     if status == "current":
         console.print(f"  [green]✓[/green] [white]{name}[/white]  [dim]up to date ({new})[/dim]")
+    elif status == "adopted":
+        console.print(
+            f"  [green]✓[/green] [white]{name}[/white]  "
+            f"[dim]adopted (existing files registered as[/dim] [cyan]{new}[/cyan][dim])[/dim]"
+        )
     elif status == "updated":
         if old == "Not installed":
             console.print(
@@ -99,9 +104,6 @@ def _status_row(table: Table, s: dict) -> None:
     installed_display = _short(s.get("installed"))
     remote_raw = s.get("remote")
     remote_display = _short(remote_raw) if remote_raw is not None else Text("—", style="dim")
-    version_tag = s.get("version_tag")
-    redundant = version_tag and version_tag == s.get("remote")
-    version_display = Text(version_tag, style="cyan") if (version_tag and not redundant) else Text("—", style="dim")
 
     if code == "current":
         status_text = Text("✓ Current", style="green")
@@ -118,13 +120,12 @@ def _status_row(table: Table, s: dict) -> None:
     else:
         status_text = Text("? Unknown", style="dim")
 
-    table.add_row(s["name"], version_display, installed_display, remote_display, status_text)
+    table.add_row(s["name"], installed_display, remote_display, status_text)
 
 
 def build_status_table(mq_statuses: list[dict], eq_statuses: list[dict]) -> Table:
     table = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold cyan")
     table.add_column("Component", style="white", no_wrap=True, min_width=20)
-    table.add_column("Version", min_width=8)
     table.add_column("Installed", style="dim", min_width=8)
     table.add_column("Remote", style="dim", min_width=8)
     table.add_column("Status", no_wrap=True)

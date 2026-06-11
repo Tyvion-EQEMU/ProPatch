@@ -249,6 +249,19 @@ async def update_one(
             "skipped": 0,
         }
 
+    # Files are on disk but not tracked — register without re-downloading
+    if installed_version is None and _is_on_disk(component, mq_rekkas):
+        await db.set_installed_version(db_path, component.id, remote)
+        return {
+            "id": component.id,
+            "name": component.name,
+            "status": "adopted",
+            "old_version": None,
+            "new_version": remote,
+            "written": 0,
+            "skipped": 0,
+        }
+
     if on_downloading:
         on_downloading()
 

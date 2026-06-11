@@ -211,6 +211,9 @@ def _log_update_result(log, result: dict) -> None:
         new = ui._short(result.get("new_version"))
         written = result.get("written", 0)
         log.info(f"  {name}: updated {old} -> {new} ({written} files)")
+    elif status == "adopted":
+        new = ui._short(result.get("new_version"))
+        log.info(f"  {name}: adopted (existing files registered as {new})")
     elif status == "current":
         log.info(f"  {name}: already current")
     elif status == "error":
