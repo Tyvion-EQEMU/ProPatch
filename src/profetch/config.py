@@ -7,7 +7,7 @@ from pathlib import Path
 
 _DEFAULT_SETTINGS = """\
 [paths]
-mq_rekkas = "C:\\\\Games\\\\MQ-Rekka"
+mq_rekkas = "C:\\\\Games\\\\MQ-Rekkas"
 eq_dirs = []
 
 [components]

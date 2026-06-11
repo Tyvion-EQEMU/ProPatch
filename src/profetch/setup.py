@@ -45,10 +45,10 @@ def _run_install_wizard() -> None:
     # ── MQ-Rekka path ─────────────────────────────────────────────────────────
     ui.console.print()
     ui.console.print(
-        "  [dim]MQ-Rekka path — root folder of the Rekkas MQ stack (e.g. C:\\Games\\MQ-Rekka)[/dim]"
+        "  [dim]MQ-Rekkas path — root folder of the Rekkas MQ stack (e.g. C:\\Games\\MQ-Rekkas)[/dim]"
     )
     mq_rekkas = Prompt.ask(
-        "  MQ-Rekka path", default=r"C:\Games\MQ-Rekka", console=ui.console
+        "  MQ-Rekkas path", default=r"C:\Games\MQ-Rekkas", console=ui.console
     )
 
     # ── EQ game directory (optional) ──────────────────────────────────────────

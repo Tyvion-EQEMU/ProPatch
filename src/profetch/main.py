@@ -131,7 +131,7 @@ def update(
     try:
         mq_rekkas = Path(settings.PATHS.mq_rekkas)
     except Exception:
-        mq_rekkas = Path(r"C:\Games\MQ-Rekka")
+        mq_rekkas = Path(r"C:\Games\MQ-Rekkas")
 
     eq_dirs = _get_eq_dirs(settings)
 
