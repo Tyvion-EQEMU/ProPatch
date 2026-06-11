@@ -281,6 +281,9 @@ def version():
 
 
 def main() -> None:
+    if getattr(sys, "frozen", False):
+        from profetch.setup import maybe_run_install_wizard
+        maybe_run_install_wizard()
     app()
 
 
