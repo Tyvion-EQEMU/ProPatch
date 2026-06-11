@@ -136,7 +136,8 @@ async def _status_async(db_path: Path, settings) -> None:
         if code == "current":
             log.info(f"  {name}: current ({ui._short(s.get('installed'))})")
         elif code == "update_available":
-            log.info(f"  {name}: update available ({ui._short(s.get('installed'))} -> {ui._short(s.get('remote'))})")
+            vtag = f" [{s['version_tag']}]" if s.get("version_tag") else ""
+            log.info(f"  {name}: update available ({ui._short(s.get('installed'))} -> {ui._short(s.get('remote'))}{vtag})")
         elif code == "not_installed":
             log.info(f"  {name}: not installed")
         elif code == "error":

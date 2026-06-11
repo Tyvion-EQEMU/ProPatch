@@ -23,6 +23,7 @@ class Component:
     branch: str | None = None  # required when tracking == COMMIT_SHA
     release_asset_name: str | None = None  # required when tracking == RELEASE_TAG
     zip_subdir: str | None = None  # extract only this subdir from the zip (strips its prefix)
+    show_version: bool = False  # also fetch latest release tag for display alongside commit SHA
 
 
 @dataclass
@@ -86,5 +87,6 @@ COMPONENTS: dict[str, Component] = {
         zip_subdir="proloot",
         protected_patterns=["config/*"],
         enabled_key="proloot",
+        show_version=True,
     ),
 }

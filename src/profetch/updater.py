@@ -29,22 +29,39 @@ async def _check_one(
     component: Component,
     installed_version: str | None,
 ) -> dict:
+    version_tag = None
     try:
         if component.tracking == TrackingMethod.COMMIT_SHA:
-            remote = await github.get_latest_commit_sha(
-                client, component.owner, component.repo, component.branch
-            )
+            if component.show_version:
+                sha_task = github.get_latest_commit_sha(
+                    client, component.owner, component.repo, component.branch
+                )
+                rel_task = github.get_latest_release(client, component.owner, component.repo)
+                sha_result, rel_result = await asyncio.gather(
+                    sha_task, rel_task, return_exceptions=True
+                )
+                if isinstance(sha_result, Exception):
+                    raise sha_result
+                remote = sha_result
+                if not isinstance(rel_result, Exception):
+                    version_tag = rel_result["tag_name"]
+            else:
+                remote = await github.get_latest_commit_sha(
+                    client, component.owner, component.repo, component.branch
+                )
         else:
             release = await github.get_latest_release(
                 client, component.owner, component.repo
             )
             remote = release["tag_name"]
+            version_tag = remote
     except Exception as exc:
         return {
             "id": component.id,
             "name": component.name,
             "installed": installed_version,
             "remote": None,
+            "version_tag": None,
             "status": "error",
             "error": str(exc),
         }
@@ -61,6 +78,7 @@ async def _check_one(
         "name": component.name,
         "installed": installed_version,
         "remote": remote,
+        "version_tag": version_tag,
         "status": status,
     }
 

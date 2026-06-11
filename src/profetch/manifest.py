@@ -32,6 +32,7 @@ def _parse_component(d: dict) -> Component:
         branch=d.get("branch"),
         release_asset_name=d.get("release_asset_name"),
         zip_subdir=d.get("zip_subdir"),
+        show_version=d.get("show_version", False),
     )
 
 
