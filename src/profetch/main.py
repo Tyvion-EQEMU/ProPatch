@@ -83,18 +83,37 @@ def status():
     asyncio.run(_status_async(db_path, settings))
 
 
+def _build_config_info(settings) -> dict:
+    from profetch.config import get_data_dir
+    try:
+        mq_path = Path(settings.PATHS.mq_rekkas)
+    except Exception:
+        mq_path = None
+    eq_dirs = _get_eq_dirs(settings)
+    data_dir = get_data_dir()
+    return {
+        "mq_rekkas": {"path": mq_path, "exists": mq_path is not None and mq_path.exists()},
+        "eq_dirs": [{"path": d, "exists": d.exists()} for d in eq_dirs],
+        "data_dir": {"path": data_dir, "exists": data_dir.exists()},
+    }
+
+
 async def _status_async(db_path: Path, settings) -> None:
     await db.init_db(db_path)
     ui.print_header(__version__)
 
     timeout = httpx.Timeout(connect=30.0, read=60.0, write=None, pool=30.0)
     async with httpx.AsyncClient(timeout=timeout) as client:
-        components, _ = await _load_manifest(client)
+        components, eq_files = await _load_manifest(client)
 
     enabled = _enabled_components(settings, components)
-    statuses = await updater.get_all_statuses(db_path, enabled, components)
-    table = ui.build_status_table(statuses)
+    mq_statuses, eq_statuses = await asyncio.gather(
+        updater.get_all_statuses(db_path, enabled, components),
+        updater.get_eq_file_statuses(db_path, eq_files),
+    )
+    table = ui.build_status_table(mq_statuses, eq_statuses)
     ui.console.print(table)
+    ui.print_config_section(_build_config_info(settings))
 
 
 @app.command()

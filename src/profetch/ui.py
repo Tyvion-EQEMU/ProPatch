@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from rich import box
 from rich.console import Console
 from rich.table import Table
@@ -27,8 +29,8 @@ def print_info(message: str) -> None:
 def _short(version: str | None) -> str:
     if version is None:
         return "Not installed"
-    # Shorten full commit SHAs to 7 chars
-    if len(version) == 40 and all(c in "0123456789abcdef" for c in version.lower()):
+    # Shorten commit SHAs (40 chars) and SHA-256 hashes (64 chars) to 7 chars
+    if len(version) in (40, 64) and all(c in "0123456789abcdef" for c in version.lower()):
         return version[:7]
     return version
 
@@ -92,29 +94,77 @@ def _print_eq_result(result: dict) -> None:
         )
 
 
-def build_status_table(statuses: list[dict]) -> Table:
+def _status_row(table: Table, s: dict) -> None:
+    code = s.get("status", "unknown")
+    installed_display = _short(s.get("installed"))
+    remote_raw = s.get("remote")
+    remote_display = _short(remote_raw) if remote_raw is not None else Text("—", style="dim")
+
+    if code == "current":
+        status_text = Text("✓ Current", style="green")
+    elif code == "installed":
+        status_text = Text("✓ Installed", style="green")
+    elif code == "update_available":
+        status_text = Text("↑ Update Available", style="yellow")
+    elif code == "not_installed":
+        status_text = Text("✗ Not Installed", style="red")
+        installed_display = Text("—", style="dim")
+    elif code == "error":
+        status_text = Text(f"! Error: {s.get('error', '')[:40]}", style="red")
+    else:
+        status_text = Text("? Unknown", style="dim")
+
+    table.add_row(s["name"], installed_display, remote_display, status_text)
+
+
+def build_status_table(mq_statuses: list[dict], eq_statuses: list[dict]) -> Table:
     table = Table(box=box.SIMPLE_HEAD, show_header=True, header_style="bold cyan")
-    table.add_column("Component", style="white", no_wrap=True, min_width=18)
+    table.add_column("Component", style="white", no_wrap=True, min_width=20)
     table.add_column("Installed", style="dim", min_width=12)
     table.add_column("Remote", style="dim", min_width=12)
     table.add_column("Status", no_wrap=True)
 
-    for s in statuses:
-        code = s.get("status", "unknown")
-        installed_display = _short(s.get("installed"))
-        remote_display = _short(s.get("remote"))
+    for s in mq_statuses:
+        _status_row(table, s)
 
-        if code == "current":
-            status_text = Text("✓ Current", style="green")
-        elif code == "update_available":
-            status_text = Text("↑ Update Available", style="yellow")
-        elif code == "not_installed":
-            status_text = Text("✗ Not Installed", style="red")
-        elif code == "error":
-            status_text = Text(f"! Error: {s.get('error', '')[:40]}", style="red")
-        else:
-            status_text = Text("? Unknown", style="dim")
-
-        table.add_row(s["name"], installed_display, remote_display, status_text)
+    if eq_statuses:
+        table.add_section()
+        for s in eq_statuses:
+            _status_row(table, s)
 
     return table
+
+
+def print_config_section(config_info: dict) -> None:
+    console.print()
+
+    t = Table(box=None, show_header=False, padding=(0, 2, 0, 0))
+    t.add_column("Key", style="dim", no_wrap=True, min_width=12)
+    t.add_column("Value", no_wrap=True)
+    t.add_column("Status", no_wrap=True)
+
+    # MQ-Rekka path
+    mq = config_info["mq_rekkas"]
+    if mq["path"] is None:
+        t.add_row("MQ-Rekka", Text("Not configured", style="red"), Text("✗", style="red"))
+    else:
+        icon = Text("✓", style="green") if mq["exists"] else Text("✗ Path not found", style="red")
+        t.add_row("MQ-Rekka", str(mq["path"]), icon)
+
+    # EQ dirs
+    eq_dirs = config_info["eq_dirs"]
+    if not eq_dirs:
+        t.add_row("EQ Dirs", Text("Not configured", style="red"), Text("✗", style="red"))
+    else:
+        for i, d in enumerate(eq_dirs):
+            label = "EQ Dirs" if i == 0 else ""
+            icon = Text("✓", style="green") if d["exists"] else Text("✗ Not found", style="red")
+            t.add_row(label, str(d["path"]), icon)
+
+    # Data dir
+    dd = config_info["data_dir"]
+    icon = Text("✓", style="green") if dd["exists"] else Text("✗ Not found", style="red")
+    t.add_row("Data Dir", str(dd["path"]), icon)
+
+    console.print(t)
+    console.print()

@@ -7,6 +7,7 @@ from enum import Enum
 class TrackingMethod(str, Enum):
     COMMIT_SHA = "commit_sha"
     RELEASE_TAG = "release_tag"
+    CONTENT_HASH = "content_hash"
 
 
 @dataclass

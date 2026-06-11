@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
@@ -9,6 +10,16 @@ import httpx
 
 from profetch import db, github, installer
 from profetch.components import COMPONENTS, Component, EqFile, TrackingMethod
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 # ── Status checks (used by `profetch status`) ────────────────────────────────
@@ -54,6 +65,40 @@ async def _check_one(
     }
 
 
+async def _check_eq_one(
+    client: httpx.AsyncClient,
+    eq_file: EqFile,
+    installed_version: str | None,
+) -> dict:
+    base = {"id": eq_file.id, "name": eq_file.name, "kind": "eq_file"}
+
+    if eq_file.tracking == TrackingMethod.COMMIT_SHA:
+        try:
+            remote = await github.get_latest_commit_sha(
+                client, eq_file.owner, eq_file.repo, eq_file.branch
+            )
+        except Exception as exc:
+            return {**base, "installed": installed_version, "remote": None,
+                    "status": "error", "error": str(exc)}
+
+        if installed_version is None:
+            status = "not_installed"
+        elif installed_version == remote:
+            status = "current"
+        else:
+            status = "update_available"
+
+        return {**base, "installed": installed_version, "remote": remote, "status": status}
+
+    # Content-hash tracked — can't check remote without downloading
+    return {
+        **base,
+        "installed": installed_version,
+        "remote": None,
+        "status": "not_installed" if installed_version is None else "installed",
+    }
+
+
 async def get_all_statuses(
     db_path: Path, enabled_ids: list[str], components: dict[str, Component] | None = None
 ) -> list[dict]:
@@ -66,6 +111,21 @@ async def get_all_statuses(
             _check_one(client, components[cid], installed.get(cid))
             for cid in enabled_ids
             if cid in components
+        ]
+        results = await asyncio.gather(*tasks)
+
+    return list(results)
+
+
+async def get_eq_file_statuses(
+    db_path: Path, eq_files: list[EqFile]
+) -> list[dict]:
+    installed = await db.get_all_eq_versions(db_path)
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        tasks = [
+            _check_eq_one(client, ef, installed.get(ef.id))
+            for ef in eq_files
         ]
         results = await asyncio.gather(*tasks)
 
@@ -100,10 +160,6 @@ async def update_one(
     installed_version: str | None,
     on_downloading: Callable[[], None] | None = None,
 ) -> dict:
-    """
-    Check remote version, download if needed, install, record in DB.
-    Calls on_downloading() (sync) right before the download begins.
-    """
     release_data = None
     try:
         if component.tracking == TrackingMethod.COMMIT_SHA:
@@ -179,7 +235,7 @@ async def update_one(
     }
 
 
-# ── EQ file update logic (used by `profetch update` and `profetch update-eq`) ─
+# ── EQ file update logic ──────────────────────────────────────────────────────
 
 def _eq_error_result(eq_file: EqFile, error: str) -> dict:
     return {
@@ -200,12 +256,6 @@ async def update_eq_file(
     installed_version: str | None,
     on_downloading: Callable[[], None] | None = None,
 ) -> dict:
-    """
-    Download an EQ file and install it to each configured EQ directory.
-
-    - Direct-URL files (tracking=None): always re-download.
-    - GitHub-tracked files (tracking=commit_sha): skip if SHA unchanged.
-    """
     if not eq_dirs:
         return {
             "id": eq_file.id,
@@ -216,9 +266,7 @@ async def update_eq_file(
             "kind": "eq_file",
         }
 
-    remote_version: str | None = None
-
-    # For GitHub-tracked items check the SHA first
+    # Commit-SHA tracked: cheap remote check first, skip download if current
     if eq_file.tracking == TrackingMethod.COMMIT_SHA:
         try:
             remote_version = await github.get_latest_commit_sha(
@@ -236,44 +284,66 @@ async def update_eq_file(
                 "kind": "eq_file",
             }
 
-    if on_downloading:
-        on_downloading()
+        if on_downloading:
+            on_downloading()
 
-    try:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tmp = Path(tmpdir)
-
-            if eq_file.tracking == TrackingMethod.COMMIT_SHA:
-                # GitHub zip — strip top-level prefix, extract to each EQ dir
-                zip_path = tmp / f"{eq_file.repo}.zip"
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                zip_path = Path(tmpdir) / f"{eq_file.repo}.zip"
                 await github.download_zip(
                     client, eq_file.owner, eq_file.repo, eq_file.branch, zip_path
                 )
                 written, _ = installer.extract_zip_to_eq_dirs(
                     zip_path, eq_dirs, eq_file.destination
                 )
-            else:
-                # Direct URL download
-                fname = eq_file.filename or Path(eq_file.url).name
-                file_path = tmp / fname
-                await github.download_file(client, eq_file.url, file_path)
+        except Exception as exc:
+            return _eq_error_result(eq_file, str(exc))
 
-                if eq_file.extract:
-                    written, _ = installer.extract_zip_to_eq_dirs(
-                        file_path, eq_dirs, eq_file.destination
-                    )
-                else:
-                    written = installer.install_eq_file(
-                        file_path, eq_dirs, eq_file.destination
-                    )
+        await db.set_eq_file_version(db_path, eq_file.id, remote_version)
+        return {
+            "id": eq_file.id,
+            "name": eq_file.name,
+            "status": "updated",
+            "written": written,
+            "dirs": len(eq_dirs),
+            "kind": "eq_file",
+        }
+
+    # Content-hash tracked (default for direct-URL files): download, hash, compare
+    if on_downloading:
+        on_downloading()
+
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            fname = eq_file.filename or Path(eq_file.url).name
+            file_path = tmp / fname
+            await github.download_file(client, eq_file.url, file_path)
+
+            new_hash = _sha256(file_path)
+
+            if installed_version == new_hash:
+                return {
+                    "id": eq_file.id,
+                    "name": eq_file.name,
+                    "status": "current",
+                    "written": 0,
+                    "kind": "eq_file",
+                }
+
+            if eq_file.extract:
+                written, _ = installer.extract_zip_to_eq_dirs(
+                    file_path, eq_dirs, eq_file.destination
+                )
+            else:
+                written = installer.install_eq_file(
+                    file_path, eq_dirs, eq_file.destination
+                )
 
     except Exception as exc:
         return _eq_error_result(eq_file, str(exc))
 
-    # Record version: SHA for tracked items, "downloaded" marker for direct-URL
-    version_to_record = remote_version or "downloaded"
-    await db.set_eq_file_version(db_path, eq_file.id, version_to_record)
-
+    await db.set_eq_file_version(db_path, eq_file.id, new_hash)
     return {
         "id": eq_file.id,
         "name": eq_file.name,
