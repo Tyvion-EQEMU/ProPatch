@@ -75,16 +75,16 @@ COMPONENTS: dict[str, Component] = {
         protected_patterns=["config/*"],
         enabled_key="rgmercs",
     ),
-    "e9loot": Component(
-        id="e9loot",
-        name="e9loot (proLoot)",
+    "proloot": Component(
+        id="proloot",
+        name="proLoot",
         owner="Tyvion-EQEMU",
-        repo="e9loot",
+        repo="proLoot",
         tracking=TrackingMethod.COMMIT_SHA,
         branch="main",
-        destination="lua/e9loot",
-        zip_subdir="e9loot",
+        destination="lua/proloot",
+        zip_subdir="proloot",
         protected_patterns=["config/*"],
-        enabled_key="e9loot",
+        enabled_key="proloot",
     ),
 }

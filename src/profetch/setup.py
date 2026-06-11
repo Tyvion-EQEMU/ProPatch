@@ -76,11 +76,13 @@ def _run_install_wizard() -> None:
 
     # ── Copy exe ──────────────────────────────────────────────────────────────
     dest_exe = install_dir / "profetch.exe"
-    try:
-        shutil.copy2(sys.executable, dest_exe)
-    except OSError as exc:
-        ui.print_error(f"Could not copy profetch.exe to {install_dir}: {exc}")
-        sys.exit(1)
+    src_exe = Path(sys.executable).resolve()
+    if src_exe != dest_exe.resolve():
+        try:
+            shutil.copy2(src_exe, dest_exe)
+        except OSError as exc:
+            ui.print_error(f"Could not copy profetch.exe to {install_dir}: {exc}")
+            sys.exit(1)
 
     # ── Done ──────────────────────────────────────────────────────────────────
     ui.console.print(f"[green]✓[/green] Installed to:  [bold]{dest_exe}[/bold]")

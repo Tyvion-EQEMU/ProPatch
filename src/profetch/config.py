@@ -14,7 +14,7 @@ eq_dirs = []
 rekkas_mq = true
 mq2rwarp = true
 rgmercs = true
-e9loot = true
+proloot = true
 
 [protected]
 always = ["config/*", "MacroQuest.ini"]
