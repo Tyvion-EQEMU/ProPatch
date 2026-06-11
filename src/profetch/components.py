@@ -77,7 +77,7 @@ COMPONENTS: dict[str, Component] = {
     ),
     "proloot": Component(
         id="proloot",
-        name="proLoot",
+        name="ProLoot",
         owner="Tyvion-EQEMU",
         repo="proLoot",
         tracking=TrackingMethod.COMMIT_SHA,
