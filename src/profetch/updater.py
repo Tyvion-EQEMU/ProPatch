@@ -36,7 +36,7 @@ async def _check_one(
                 sha_task = github.get_latest_commit_sha(
                     client, component.owner, component.repo, component.branch
                 )
-                tag_task = github.get_latest_tag(client, component.owner, component.repo)
+                tag_task = github.get_latest_version_tag(client, component.owner, component.repo)
                 sha_result, tag_result = await asyncio.gather(
                     sha_task, tag_task, return_exceptions=True
                 )

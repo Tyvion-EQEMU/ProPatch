@@ -36,6 +36,23 @@ async def get_latest_tag(
     return tags[0]["name"] if tags else None
 
 
+async def get_latest_version_tag(
+    client: httpx.AsyncClient, owner: str, repo: str
+) -> str | None:
+    """Try the releases API first (human-published); fall back to git tags."""
+    try:
+        url = f"{GITHUB_API}/repos/{owner}/{repo}/releases/latest"
+        r = await client.get(url, headers=_HEADERS)
+        if r.status_code == 200:
+            return r.json()["tag_name"]
+    except Exception:
+        pass
+    try:
+        return await get_latest_tag(client, owner, repo)
+    except Exception:
+        return None
+
+
 def find_release_asset_url(release: dict, filename: str) -> str | None:
     for asset in release.get("assets", []):
         if asset["name"] == filename:
