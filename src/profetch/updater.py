@@ -36,15 +36,15 @@ async def _check_one(
                 sha_task = github.get_latest_commit_sha(
                     client, component.owner, component.repo, component.branch
                 )
-                rel_task = github.get_latest_release(client, component.owner, component.repo)
-                sha_result, rel_result = await asyncio.gather(
-                    sha_task, rel_task, return_exceptions=True
+                tag_task = github.get_latest_tag(client, component.owner, component.repo)
+                sha_result, tag_result = await asyncio.gather(
+                    sha_task, tag_task, return_exceptions=True
                 )
                 if isinstance(sha_result, Exception):
                     raise sha_result
                 remote = sha_result
-                if not isinstance(rel_result, Exception):
-                    version_tag = rel_result["tag_name"]
+                if not isinstance(tag_result, Exception):
+                    version_tag = tag_result
             else:
                 remote = await github.get_latest_commit_sha(
                     client, component.owner, component.repo, component.branch

@@ -26,6 +26,16 @@ async def get_latest_release(
     return r.json()
 
 
+async def get_latest_tag(
+    client: httpx.AsyncClient, owner: str, repo: str
+) -> str | None:
+    url = f"{GITHUB_API}/repos/{owner}/{repo}/tags"
+    r = await client.get(url, headers=_HEADERS)
+    r.raise_for_status()
+    tags = r.json()
+    return tags[0]["name"] if tags else None
+
+
 def find_release_asset_url(release: dict, filename: str) -> str | None:
     for asset in release.get("assets", []):
         if asset["name"] == filename:
