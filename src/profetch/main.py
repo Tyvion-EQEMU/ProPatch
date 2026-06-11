@@ -16,7 +16,7 @@ import httpx
 import typer
 
 from profetch.__about__ import __version__
-from profetch import config, db, ui, updater
+from profetch import config, db, log as plog, ui, updater
 from profetch.components import COMPONENTS, Component, EqFile
 
 # Short aliases the user can type on the CLI
@@ -79,6 +79,7 @@ def status():
     settings = config.load_settings()
     config.ensure_data_dir()
     db_path = config.get_db_path()
+    plog.setup(config.get_data_dir() / "profetch.log")
 
     asyncio.run(_status_async(db_path, settings))
 
@@ -127,6 +128,20 @@ async def _status_async(db_path: Path, settings) -> None:
     ui.print_config_section(_build_config_info(settings))
     ui.print_setup_reminder()
 
+    log = plog.get()
+    log.info("--- status ---")
+    for s in mq_statuses + eq_statuses:
+        code = s.get("status", "unknown")
+        name = s["name"]
+        if code == "current":
+            log.info(f"  {name}: current ({ui._short(s.get('installed'))})")
+        elif code == "update_available":
+            log.info(f"  {name}: update available ({ui._short(s.get('installed'))} -> {ui._short(s.get('remote'))})")
+        elif code == "not_installed":
+            log.info(f"  {name}: not installed")
+        elif code == "error":
+            log.warning(f"  {name}: error — {s.get('error')}")
+
 
 @app.command()
 def update(
@@ -146,6 +161,7 @@ def update(
         mq_rekkas = Path(r"C:\Games\MQ-Rekkas")
 
     eq_dirs = _get_eq_dirs(settings)
+    plog.setup(config.get_data_dir() / "profetch.log")
 
     if component is not None:
         cid = _ALIASES.get(component.lower())
@@ -166,6 +182,8 @@ def update_eq():
     db_path = config.get_db_path()
     eq_dirs = _get_eq_dirs(settings)
 
+    plog.setup(config.get_data_dir() / "profetch.log")
+
     if not eq_dirs:
         ui.print_error(
             "No EQ directories configured. Add eq_dirs to settings.local.toml:\n"
@@ -174,6 +192,20 @@ def update_eq():
         raise typer.Exit(1)
 
     asyncio.run(_update_eq_async(db_path, eq_dirs))
+
+
+def _log_update_result(log, result: dict) -> None:
+    name = result["name"]
+    status = result.get("status")
+    if status == "updated":
+        old = ui._short(result.get("old_version"))
+        new = ui._short(result.get("new_version"))
+        written = result.get("written", 0)
+        log.info(f"  {name}: updated {old} -> {new} ({written} files)")
+    elif status == "current":
+        log.info(f"  {name}: already current")
+    elif status == "error":
+        log.error(f"  {name}: {result.get('error', 'unknown error')}")
 
 
 async def _update_async(
@@ -216,6 +248,18 @@ async def _update_async(
             if s["status"] in ("not_installed", "update_available")
         }
 
+        log = plog.get()
+        log.info("--- update ---")
+        for s in mq_statuses + eq_statuses:
+            code = s.get("status", "unknown")
+            name = s["name"]
+            if code == "current":
+                log.info(f"  {name}: current ({ui._short(s.get('installed'))})")
+            elif code in ("not_installed", "update_available"):
+                log.info(f"  {name}: {code.replace('_', ' ')}")
+            elif code == "error":
+                log.warning(f"  {name}: error — {s.get('error')}")
+
         if not needs_update_ids:
             ui.console.print("  [green]Everything is up to date.[/green]")
             ui.print_setup_reminder()
@@ -245,6 +289,7 @@ async def _update_async(
                     ),
                 )
                 ui.print_update_result(result)
+                _log_update_result(log, result)
 
                 if result["status"] == "updated":
                     updated += 1
@@ -265,6 +310,7 @@ async def _update_async(
                         ),
                     )
                     ui.print_update_result(result)
+                    _log_update_result(log, result)
                     if result["status"] == "updated":
                         updated += 1
                     elif result["status"] == "current":
@@ -282,6 +328,7 @@ async def _update_async(
 
     summary = ", ".join(parts) if parts else "nothing to do"
     ui.console.print(f"\nDone. {summary}.")
+    log.info(f"  done: {updated} updated, {current} current, {errors} error(s)")
     ui.print_setup_reminder()
 
 
@@ -291,6 +338,8 @@ async def _update_eq_async(db_path: Path, eq_dirs: list[Path]) -> None:
 
     timeout = httpx.Timeout(connect=30.0, read=None, write=None, pool=30.0)
     updated = current = errors = 0
+    log = plog.get()
+    log.info("--- update-eq ---")
 
     async with httpx.AsyncClient(timeout=timeout) as client:
         _, eq_files = await _load_manifest(client)
@@ -311,6 +360,7 @@ async def _update_eq_async(db_path: Path, eq_dirs: list[Path]) -> None:
                     ),
                 )
                 ui.print_update_result(result)
+                _log_update_result(log, result)
                 if result["status"] == "updated":
                     updated += 1
                 elif result["status"] == "current":
@@ -328,6 +378,7 @@ async def _update_eq_async(db_path: Path, eq_dirs: list[Path]) -> None:
 
     summary = ", ".join(parts) if parts else "nothing to do"
     ui.console.print(f"\nDone. {summary}.")
+    log.info(f"  done: {updated} updated, {current} current, {errors} error(s)")
     ui.print_setup_reminder()
 
 
