@@ -4,13 +4,13 @@ import shutil
 import sys
 from pathlib import Path
 
-from rich.prompt import Prompt
+from rich.prompt import Confirm, Prompt
 
 from profetch import ui
 from profetch.config import _DEFAULT_SETTINGS
 
 
-_DEFAULT_INSTALL_DIR = r"C:\proFetch"
+_DEFAULT_INSTALL_DIR = r"C:\Games\proFetch"
 
 
 def maybe_run_install_wizard() -> None:
@@ -29,6 +29,22 @@ def maybe_run_install_wizard() -> None:
     sys.exit(0)
 
 
+def run_setup(data_dir: Path) -> None:
+    """Re-run path configuration — called by the 'profetch setup' command."""
+    ui.console.print()
+    ui.console.print("[bold cyan]  proFetch — Reconfigure Paths[/bold cyan]")
+    ui.console.print()
+    try:
+        mq_rekkas, eq_instances = _prompt_paths()
+    except KeyboardInterrupt:
+        ui.console.print("\n[yellow]Setup cancelled.[/yellow]")
+        return
+    _write_settings_local(data_dir, mq_rekkas, eq_instances)
+    ui.console.print()
+    ui.console.print("[green]✓[/green] Settings updated.")
+    ui.print_setup_reminder()
+
+
 def _run_install_wizard() -> None:
     ui.console.print()
     ui.console.print("[bold cyan]  proFetch — First-Time Setup[/bold cyan]")
@@ -42,23 +58,8 @@ def _run_install_wizard() -> None:
         Prompt.ask("  Install directory", default=_DEFAULT_INSTALL_DIR, console=ui.console)
     )
 
-    # ── MQ-Rekka path ─────────────────────────────────────────────────────────
     ui.console.print()
-    ui.console.print(
-        "  [dim]MQ-Rekkas path — root folder of the Rekkas MQ stack (e.g. C:\\Games\\MQ-Rekkas)[/dim]"
-    )
-    mq_rekkas = Prompt.ask(
-        "  MQ-Rekkas path", default=r"C:\Games\MQ-Rekkas", console=ui.console
-    )
-
-    # ── EQ game directory (optional) ──────────────────────────────────────────
-    ui.console.print()
-    ui.console.print(
-        "  [dim]EQ game directory — needed for EQ file updates (spells, dbstr, etc.)[/dim]"
-    )
-    ui.console.print("  [dim]Leave blank to skip; you can add this later in settings.local.toml.[/dim]")
-    eq_dir_raw = Prompt.ask("  EQ game directory", default="", console=ui.console)
-
+    mq_rekkas, eq_instances = _prompt_paths()
     ui.console.print()
 
     # ── Create directories ────────────────────────────────────────────────────
@@ -69,19 +70,11 @@ def _run_install_wizard() -> None:
         ui.print_error(f"Could not create install directory: {exc}")
         sys.exit(1)
 
-    # ── Write settings.toml (shipped defaults) ────────────────────────────────
+    # ── Write settings ────────────────────────────────────────────────────────
     (data_dir / "settings.toml").write_text(_DEFAULT_SETTINGS, encoding="utf-8")
+    _write_settings_local(data_dir, mq_rekkas, eq_instances)
 
-    # ── Write settings.local.toml (user's paths) ──────────────────────────────
-    local_lines = ["[paths]", f'mq_rekkas = "{mq_rekkas}"']
-    eq_dir = eq_dir_raw.strip()
-    if eq_dir:
-        local_lines.append(f'eq_dirs = ["{eq_dir}"]')
-    (data_dir / "settings.local.toml").write_text(
-        "\n".join(local_lines) + "\n", encoding="utf-8"
-    )
-
-    # ── Copy exe to install directory ─────────────────────────────────────────
+    # ── Copy exe ──────────────────────────────────────────────────────────────
     dest_exe = install_dir / "profetch.exe"
     try:
         shutil.copy2(sys.executable, dest_exe)
@@ -95,9 +88,79 @@ def _run_install_wizard() -> None:
     ui.console.print()
     ui.console.print("  Run proFetch from its new location:")
     ui.console.print(f"  [bold cyan]{dest_exe}[/bold cyan]")
+    ui.print_setup_reminder()
+
+
+def _prompt_paths() -> tuple[str, list[tuple[str, str]]]:
+    """Ask for MQ Patch path and EQ game directories. Returns (mq_path, [(dir, name), ...])."""
+
+    # MQ Patch
+    ui.console.print(
+        "  [dim]MQ Patch — root folder of the Rekkas MQ install (e.g. C:\\Games\\MQ-Rekkas)[/dim]"
+    )
+    mq_rekkas = Prompt.ask(
+        "  MQ Patch", default=r"C:\Games\MQ-Rekkas", console=ui.console
+    )
+
+    # EQ directories
     ui.console.print()
     ui.console.print(
-        "  [dim]To customize settings, edit:[/dim] "
-        f"[dim]{data_dir / 'settings.local.toml'}[/dim]"
+        "  [dim]EQ game directory — needed for EQ file updates (spells, dbstr, etc.)[/dim]"
     )
-    ui.console.print()
+    ui.console.print(
+        "  [dim]Leave blank to skip; you can add this later with 'profetch setup'.[/dim]"
+    )
+    eq_dir_raw = Prompt.ask("  EQ game directory", default="", console=ui.console)
+
+    eq_instances: list[tuple[str, str]] = []
+    eq_dir = eq_dir_raw.strip()
+
+    if eq_dir:
+        more = Confirm.ask(
+            "  Do you have additional EQ instances?", default=False, console=ui.console
+        )
+        if more:
+            name1 = Prompt.ask(
+                "  Name for this instance", default="Main", console=ui.console
+            )
+            eq_instances.append((eq_dir, name1))
+
+            while True:
+                ui.console.print()
+                next_dir = Prompt.ask(
+                    "  Next EQ game directory", console=ui.console
+                )
+                next_name = Prompt.ask(
+                    "  Name for this instance",
+                    default=f"Instance {len(eq_instances) + 1}",
+                    console=ui.console,
+                )
+                eq_instances.append((next_dir.strip(), next_name))
+                again = Confirm.ask(
+                    "  Do you have more EQ instances?", default=False, console=ui.console
+                )
+                if not again:
+                    break
+        else:
+            eq_instances.append((eq_dir, ""))
+
+    return mq_rekkas, eq_instances
+
+
+def _write_settings_local(
+    data_dir: Path, mq_rekkas: str, eq_instances: list[tuple[str, str]]
+) -> None:
+    lines = ["[paths]", f'mq_rekkas = "{mq_rekkas}"']
+
+    if eq_instances:
+        paths_toml = ", ".join(f'"{inst[0]}"' for inst in eq_instances)
+        lines.append(f"eq_dirs = [{paths_toml}]")
+
+        names = [inst[1] for inst in eq_instances]
+        if any(names):
+            names_toml = ", ".join(f'"{n}"' for n in names)
+            lines.append(f"eq_dir_names = [{names_toml}]")
+
+    (data_dir / "settings.local.toml").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )

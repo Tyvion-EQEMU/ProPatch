@@ -135,7 +135,17 @@ def build_status_table(mq_statuses: list[dict], eq_statuses: list[dict]) -> Tabl
     return table
 
 
+def print_setup_reminder() -> None:
+    console.print()
+    console.print(
+        "  [dim]Run [bold white]profetch setup[/bold white]"
+        " at any time to reconfigure paths.[/dim]"
+    )
+    console.print()
+
+
 def print_config_section(config_info: dict) -> None:
+    console.print("[bold]  Configured Paths[/bold]")
     console.print()
 
     t = Table(box=None, show_header=False, padding=(0, 2, 0, 0))
@@ -143,13 +153,13 @@ def print_config_section(config_info: dict) -> None:
     t.add_column("Value", no_wrap=True)
     t.add_column("Status", no_wrap=True)
 
-    # MQ-Rekka path
+    # MQ Patch path
     mq = config_info["mq_rekkas"]
     if mq["path"] is None:
-        t.add_row("MQ-Rekka", Text("Not configured", style="red"), Text("✗", style="red"))
+        t.add_row("MQ Patch", Text("Not configured", style="red"), Text("✗", style="red"))
     else:
         icon = Text("✓", style="green") if mq["exists"] else Text("✗ Path not found", style="red")
-        t.add_row("MQ-Rekka", str(mq["path"]), icon)
+        t.add_row("MQ Patch", str(mq["path"]), icon)
 
     # EQ dirs
     eq_dirs = config_info["eq_dirs"]
@@ -157,9 +167,11 @@ def print_config_section(config_info: dict) -> None:
         t.add_row("EQ Dirs", Text("Not configured", style="red"), Text("✗", style="red"))
     else:
         for i, d in enumerate(eq_dirs):
+            name = d.get("name", "")
             label = "EQ Dirs" if i == 0 else ""
+            display = f"{d['path']}  [dim]({name})[/dim]" if name else str(d["path"])
             icon = Text("✓", style="green") if d["exists"] else Text("✗ Not found", style="red")
-            t.add_row(label, str(d["path"]), icon)
+            t.add_row(label, display, icon)
 
     # Data dir
     dd = config_info["data_dir"]

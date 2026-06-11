@@ -90,10 +90,20 @@ def _build_config_info(settings) -> dict:
     except Exception:
         mq_path = None
     eq_dirs = _get_eq_dirs(settings)
+    try:
+        raw_names = settings.get("PATHS.eq_dir_names", default=[])
+        if isinstance(raw_names, str):
+            raw_names = [raw_names]
+        eq_dir_names = list(raw_names) if raw_names else []
+    except Exception:
+        eq_dir_names = []
     data_dir = get_data_dir()
     return {
         "mq_rekkas": {"path": mq_path, "exists": mq_path is not None and mq_path.exists()},
-        "eq_dirs": [{"path": d, "exists": d.exists()} for d in eq_dirs],
+        "eq_dirs": [
+            {"path": d, "exists": d.exists(), "name": eq_dir_names[i] if i < len(eq_dir_names) else ""}
+            for i, d in enumerate(eq_dirs)
+        ],
         "data_dir": {"path": data_dir, "exists": data_dir.exists()},
     }
 
@@ -114,6 +124,7 @@ async def _status_async(db_path: Path, settings) -> None:
     table = ui.build_status_table(mq_statuses, eq_statuses)
     ui.console.print(table)
     ui.print_config_section(_build_config_info(settings))
+    ui.print_setup_reminder()
 
 
 @app.command()
@@ -246,6 +257,7 @@ async def _update_async(
 
     summary = ", ".join(parts) if parts else "nothing to do"
     ui.console.print(f"\nDone. {summary}.")
+    ui.print_setup_reminder()
 
 
 async def _update_eq_async(db_path: Path, eq_dirs: list[Path]) -> None:
@@ -291,6 +303,15 @@ async def _update_eq_async(db_path: Path, eq_dirs: list[Path]) -> None:
 
     summary = ", ".join(parts) if parts else "nothing to do"
     ui.console.print(f"\nDone. {summary}.")
+    ui.print_setup_reminder()
+
+
+@app.command()
+def setup():
+    """Reconfigure proFetch paths and settings."""
+    from profetch.setup import run_setup
+    config.ensure_data_dir()
+    run_setup(config.get_data_dir())
 
 
 @app.command()
