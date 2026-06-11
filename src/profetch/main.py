@@ -117,10 +117,11 @@ async def _status_async(db_path: Path, settings) -> None:
         components, eq_files = await _load_manifest(client)
 
     enabled = _enabled_components(settings, components)
-    mq_statuses, eq_statuses = await asyncio.gather(
-        updater.get_all_statuses(db_path, enabled, components),
-        updater.get_eq_file_statuses(db_path, eq_files),
-    )
+    with ui.console.status("[dim]Checking for updates...[/dim]"):
+        mq_statuses, eq_statuses = await asyncio.gather(
+            updater.get_all_statuses(db_path, enabled, components),
+            updater.get_eq_file_statuses(db_path, eq_files),
+        )
     table = ui.build_status_table(mq_statuses, eq_statuses)
     ui.console.print(table)
     ui.print_config_section(_build_config_info(settings))

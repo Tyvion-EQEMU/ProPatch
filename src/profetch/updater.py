@@ -90,13 +90,25 @@ async def _check_eq_one(
 
         return {**base, "installed": installed_version, "remote": remote, "status": status}
 
-    # Content-hash tracked — can't check remote without downloading
-    return {
-        **base,
-        "installed": installed_version,
-        "remote": None,
-        "status": "not_installed" if installed_version is None else "installed",
-    }
+    # Content-hash tracked: download and hash to compare
+    try:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            fname = eq_file.filename or Path(eq_file.url).name
+            file_path = Path(tmpdir) / fname
+            await github.download_file(client, eq_file.url, file_path)
+            remote_hash = _sha256(file_path)
+    except Exception as exc:
+        return {**base, "installed": installed_version, "remote": None,
+                "status": "error", "error": str(exc)}
+
+    if installed_version is None:
+        status = "not_installed"
+    elif installed_version == remote_hash:
+        status = "current"
+    else:
+        status = "update_available"
+
+    return {**base, "installed": installed_version, "remote": remote_hash, "status": status}
 
 
 async def get_all_statuses(
@@ -122,7 +134,8 @@ async def get_eq_file_statuses(
 ) -> list[dict]:
     installed = await db.get_all_eq_versions(db_path)
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    timeout = httpx.Timeout(connect=30.0, read=120.0, write=None, pool=30.0)
+    async with httpx.AsyncClient(timeout=timeout) as client:
         tasks = [
             _check_eq_one(client, ef, installed.get(ef.id))
             for ef in eq_files

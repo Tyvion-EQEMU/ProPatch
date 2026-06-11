@@ -102,8 +102,6 @@ def _status_row(table: Table, s: dict) -> None:
 
     if code == "current":
         status_text = Text("✓ Current", style="green")
-    elif code == "installed":
-        status_text = Text("✓ Installed", style="green")
     elif code == "update_available":
         status_text = Text("↑ Update Available", style="yellow")
     elif code == "not_installed":
