@@ -11,30 +11,11 @@ from rich.text import Text
 # which we configure as UTF-8 in main.py.
 console = Console(legacy_windows=False)
 
-# Pre-rendered 8×4 Unicode half-block art of the ProFusion logo.
-# Generated from assets/profusion_logo_32x32.png using Pillow at build time.
-_LOGO_LINES = [
-    '[#387f6f on #47998d]▀[/][#307068 on #43a192]▀[/][#1d6d66 on #638461]▀[/][#6d7247 on #5a4f4a]▀[/][#6d6d42 on #584d49]▀[/][#246677 on #668566]▀[/][#387a93 on #39839d]▀[/][#4a514d on #404148]▀[/]',
-    '[#7e784b on #7c5f31]▀[/][#697053 on #9d722c]▀[/][#5c5650 on #856e3f]▀[/][#525b60 on #88723f]▀[/][#505a5e on #7f6f43]▀[/][#615a4d on #8b723e]▀[/][#67664e on #98783c]▀[/][#766240 on #896931]▀[/]',
-    '[#695131 on #5f462e]▀[/][#4c3b32 on #3d4a49]▀[/][#665339 on #433c43]▀[/][#535048 on #38475e]▀[/][#595448 on #35455e]▀[/][#695437 on #413f4a]▀[/][#685438 on #443938]▀[/][#7f5527 on #613e23]▀[/]',
-    '[#528e67 on #2f6e5e]▀[/][#47a174 on #285f56]▀[/][#526042 on #246155]▀[/][#493739 on #4c442e]▀[/][#4d3b39 on #4c462e]▀[/][#545e4c on #23535a]▀[/][#31262a on #31282b]▀[/][#2b241e on #2e2e27]▀[/]',
-]
-
-# Text overlaid on the right side of the logo, row by row (None = no text)
-_HEADER_SUFFIX = [
-    None,
-    "  [bold cyan]ProFetch v{version}[/bold cyan]",
-    "  [dim]EQ Profusion Component Manager[/dim]",
-    None,
-]
-
-
 def print_header(version: str) -> None:
-    console.print()
-    for logo_line, suffix_template in zip(_LOGO_LINES, _HEADER_SUFFIX):
-        suffix = suffix_template.format(version=version) if suffix_template else ""
-        console.print(logo_line + suffix)
-    console.print()
+    console.print(
+        f"\n[bold cyan]ProFetch v{version}[/bold cyan]"
+        f"  [dim]EQ Profusion Component Manager[/dim]\n"
+    )
 
 
 def print_error(message: str) -> None:
