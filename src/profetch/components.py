@@ -43,7 +43,7 @@ class EqFile:
 COMPONENTS: dict[str, Component] = {
     "rekkas_mq": Component(
         id="rekkas_mq",
-        name="Rekkas MQ Binary",
+        name="MQ Install (Rekkas)",
         owner="RekkasGit",
         repo="E3NextAndMQNextBinary",
         tracking=TrackingMethod.COMMIT_SHA,
