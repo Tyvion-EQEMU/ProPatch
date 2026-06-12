@@ -137,3 +137,34 @@ def save_gui_settings(settings: dict) -> None:
         json.dumps(settings, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+
+
+def _toml_str(value: str) -> str:
+    return value.replace("\\", "\\\\")
+
+
+def save_path_settings(
+    mq_rekkas: str,
+    eq_instances: list[dict],
+) -> None:
+    """Write [paths] block to settings.local.toml.
+
+    eq_instances is the GUI format: [{"path": ..., "name": ...}, ...]
+    """
+    data_dir = ensure_data_dir()
+
+    lines = ["[paths]", f'mq_rekkas = "{_toml_str(mq_rekkas)}"']
+
+    eq_dirs  = [inst["path"] for inst in eq_instances if inst.get("path")]
+    eq_names = [inst.get("name", "") for inst in eq_instances if inst.get("path")]
+
+    if eq_dirs:
+        paths_toml = ", ".join(f'"{_toml_str(p)}"' for p in eq_dirs)
+        lines.append(f"eq_dirs = [{paths_toml}]")
+        if any(eq_names):
+            names_toml = ", ".join(f'"{_toml_str(n)}"' for n in eq_names)
+            lines.append(f"eq_dir_names = [{names_toml}]")
+
+    (data_dir / "settings.local.toml").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )

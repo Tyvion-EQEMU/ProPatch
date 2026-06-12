@@ -326,25 +326,17 @@ class SetupWizard(ctk.CTkFrame):
         self._gui_settings["eq_instances"] = instances
 
         # Write TOML settings (paths) so the real backend can pick them up
-        _write_toml_settings(self._gui_settings)
+        try:
+            config.save_path_settings(
+                mq_rekkas=self._gui_settings.get("install_path", r"C:\Games\MQ-Rekkas"),
+                eq_instances=instances,
+            )
+            logger.info(f"Saved settings.local.toml to {config.get_data_dir()}")
+        except Exception as exc:
+            logger.error(f"Failed to write settings.local.toml: {exc}")
 
         config.save_gui_settings(self._gui_settings)
         logger.info("First-run setup complete")
         self._app.switch_view("components")
 
 
-def _write_toml_settings(gui_settings: dict) -> None:
-    """Persist path/component settings to settings.local.toml for the CLI backend."""
-    from profetch.setup import _write_settings_local
-    data_dir = config.get_data_dir()
-
-    mq_rekkas = gui_settings.get("install_path", "") or r"C:\Games\MQ-Rekkas"
-    # Convert GUI dict format [{"path": ..., "name": ...}] → tuple list
-    raw_instances = gui_settings.get("eq_instances", [])
-    instances = [
-        (inst.get("path", ""), inst.get("name", ""))
-        for inst in raw_instances
-        if inst.get("path")
-    ]
-
-    _write_settings_local(data_dir, mq_rekkas, instances)
