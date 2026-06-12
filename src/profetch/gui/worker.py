@@ -140,6 +140,7 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
       "self_update_pending"  — bat launched, app should exit
     Raises on download or bat-write failure so the caller can fall back gracefully.
     """
+    import os
     import subprocess
     import sys
     from profetch import github
@@ -167,20 +168,31 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
     logger.info(f"  ProFetch: downloading {remote} from {asset_url}")
     await github.download_file(client, asset_url, new_exe)
 
+    pid     = os.getpid()
     exe_str = str(exe_path)
     new_str = str(new_exe)
+
+    # Loop on the PID so we only move the exe once the old process is gone.
+    # A fixed sleep races with PyInstaller shutdown and loses — the exe stays
+    # locked until the process truly exits.
     bat_content = (
         "@echo off\n"
-        "timeout /t 2 /nobreak > nul\n"
+        ":WAIT\n"
+        f'tasklist /fi "PID eq {pid}" 2>nul | find "{pid}" >nul 2>&1\n'
+        "if not errorlevel 1 (\n"
+        "    timeout /t 1 /nobreak >nul\n"
+        "    goto WAIT\n"
+        ")\n"
         f'move /y "{new_str}" "{exe_str}"\n'
         f'start "" "{exe_str}"\n'
         'del "%~f0"\n'
     )
     bat_path.write_text(bat_content, encoding="utf-8")
 
+    _CREATE_NO_WINDOW = 0x08000000
     subprocess.Popen(
         ["cmd", "/c", str(bat_path)],
-        creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+        creationflags=_CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP,
     )
 
     return {"status": "self_update_pending", "new_version": remote}
