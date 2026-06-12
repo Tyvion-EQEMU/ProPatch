@@ -13,8 +13,14 @@ _TITLE = "ProFetch — EQ Profusion Component Manager"
 
 
 def _build_gui_manifest() -> list[dict]:
-    """Convert the hardcoded Component objects to the dict format the GUI views expect."""
+    """Build the display manifest for the component table.
+
+    MQ entries come from the hardcoded COMPONENTS fallback; EQ server files
+    are listed here as a static fallback since they're only defined in the
+    remote manifest TOML (no hardcoded EqFile dict exists in components.py).
+    """
     from profetch.components import COMPONENTS
+
     result = []
     for comp in COMPONENTS.values():
         result.append({
@@ -23,6 +29,14 @@ def _build_gui_manifest() -> list[dict]:
             "section":     "mq",
             "description": "",
         })
+
+    # EQ server files — fallback entries; real names/IDs come from remote manifest
+    _EQ_SERVER_FILES = [
+        {"id": "spells_us", "name": "spells_US.txt",  "section": "server", "description": ""},
+        {"id": "dbstr_us",  "name": "dbstr_US.txt",   "section": "server", "description": ""},
+    ]
+    result.extend(_EQ_SERVER_FILES)
+
     return result
 
 
