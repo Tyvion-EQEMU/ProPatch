@@ -93,6 +93,7 @@ class SetupWizard(ctk.CTkFrame):
 
         self._build_section_header(scroll, "ProFetch")
         self._build_profetch_path(scroll)
+        self._build_github_token(scroll)
 
         self._build_section_header(scroll, "MacroQuest")
         self._build_mq_section(scroll)
@@ -152,6 +153,35 @@ class SetupWizard(ctk.CTkFrame):
         )
         shortcut_switch.pack(side="left", padx=(12, 0))
         Tooltip(shortcut_lbl, "Place a ProFetch shortcut on your Windows Desktop for quick access.")
+
+    # ── GitHub token ─────────────────────────────────────────────────────────
+
+    def _build_github_token(self, parent) -> None:
+        row = ctk.CTkFrame(parent, fg_color="transparent")
+        row.pack(fill="x", pady=3)
+
+        lbl = ctk.CTkLabel(row, text="GitHub Token (optional)",
+                           width=_LABEL_W, anchor="w", font=ctk.CTkFont(size=12))
+        lbl.pack(side="left", padx=(8, 0))
+
+        # Pre-fill from existing settings if present
+        existing_token = ""
+        try:
+            s = config.load_settings()
+            val = config.get_github_token(s)
+            if val:
+                existing_token = val
+        except Exception:
+            pass
+
+        self._token_var = tk.StringVar(value=existing_token)
+        ctk.CTkEntry(row, textvariable=self._token_var, width=_ENTRY_W,
+                     placeholder_text="ghp_…  (raises limit to 5000 req/hr)",
+                     show="").pack(side="left", padx=(6, 4))
+        Tooltip(lbl,
+                "Personal Access Token from github.com/settings/tokens — "
+                "no scopes needed for public repos. Raises the GitHub API "
+                "rate limit from 60 to 5000 requests per hour.")
 
     # ── MacroQuest ────────────────────────────────────────────────────────────
 
@@ -345,11 +375,12 @@ class SetupWizard(ctk.CTkFrame):
                 instances.append(entry)
         self._gui_settings["eq_instances"] = instances
 
-        # Write TOML settings (paths) so the real backend can pick them up
+        # Write TOML settings (paths + optional token) so the backend can pick them up
         try:
             config.save_path_settings(
                 mq_rekkas=self._gui_settings.get("install_path", r"C:\Games\MQ-Rekkas"),
                 eq_instances=instances,
+                github_token=self._token_var.get().strip(),
             )
             logger.info(f"Saved settings.local.toml to {config.get_data_dir()}")
         except Exception as exc:

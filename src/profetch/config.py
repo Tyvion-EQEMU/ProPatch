@@ -147,14 +147,21 @@ def _toml_str(value: str) -> str:
 def save_path_settings(
     mq_rekkas: str,
     eq_instances: list[dict],
+    github_token: str = "",
 ) -> None:
-    """Write [paths] block to settings.local.toml.
+    """Write settings.local.toml with an optional root-level github_token
+    followed by the [paths] block.
 
     eq_instances is the GUI format: [{"path": ..., "name": ...}, ...]
     """
     data_dir = ensure_data_dir()
 
-    lines = ["[paths]", f'mq_rekkas = "{_toml_str(mq_rekkas)}"']
+    lines: list[str] = []
+    if github_token.strip():
+        lines.append(f'github_token = "{_toml_str(github_token.strip())}"')
+        lines.append("")
+
+    lines += ["[paths]", f'mq_rekkas = "{_toml_str(mq_rekkas)}"']
 
     eq_dirs  = [inst["path"] for inst in eq_instances if inst.get("path")]
     eq_names = [inst.get("name", "") for inst in eq_instances if inst.get("path")]
