@@ -1,7 +1,8 @@
 from __future__ import annotations
+import asyncio
 import customtkinter as ctk
 
-from profetch import config, log as plog
+from profetch import config, db, log as plog
 from profetch.gui.views.components_view import ComponentsView
 from profetch.gui.views.log_view import LogView
 from profetch.gui.views.setup_wizard import SetupWizard
@@ -12,17 +13,42 @@ ctk.set_default_color_theme("blue")
 _TITLE = "ProFetch — EQ Profusion Component Manager"
 
 
+def _seed_profetch_version() -> None:
+    """Store the running ProFetch version in the DB on every startup.
+
+    This ensures the patcher's own version is always tracked correctly —
+    including after a self-update bat swap where a new exe boots for the
+    first time.
+    """
+    from profetch.__about__ import __version__
+
+    async def _seed():
+        db_path = config.get_db_path()
+        await db.init_db(db_path)
+        await db.set_installed_version(db_path, "profetch", f"v{__version__}")
+
+    try:
+        asyncio.run(_seed())
+    except Exception:
+        pass
+
+
 def _build_gui_manifest() -> list[dict]:
     """Build the display manifest for the component table.
 
-    MQ entries come from the hardcoded COMPONENTS fallback; EQ server files
-    are listed here as a static fallback since they're only defined in the
-    remote manifest TOML (no hardcoded EqFile dict exists in components.py).
+    ProFetch itself is listed first in the 'patcher' section so users can
+    see at a glance whether the patcher needs updating.  MQ entries come
+    from the hardcoded COMPONENTS fallback; EQ server files are a static
+    fallback since they're only defined in the remote manifest TOML.
     """
     from profetch.components import COMPONENTS
 
-    result = []
+    result = [
+        {"id": "profetch", "name": "ProFetch", "section": "patcher", "description": ""},
+    ]
     for comp in COMPONENTS.values():
+        if comp.id == "profetch":
+            continue  # already listed in patcher section above
         result.append({
             "id":          comp.id,
             "name":        comp.name,
@@ -55,6 +81,7 @@ class App(ctk.CTk):
         self.minsize(680, 400)
 
         plog.setup(config.get_data_dir() / "profetch.log")
+        _seed_profetch_version()
 
         self._gui_settings = config.load_gui_settings()
         self._manifest     = _build_gui_manifest()

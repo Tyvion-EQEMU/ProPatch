@@ -43,6 +43,18 @@ class EqFile:
 
 # Hardcoded fallback — used if the manifest cannot be fetched
 COMPONENTS: dict[str, Component] = {
+    "profetch": Component(
+        id="profetch",
+        name="ProFetch",
+        owner="Tyvion-EQEMU",
+        repo="ProFetch",
+        tracking=TrackingMethod.RELEASE_TAG,
+        destination="",
+        protected_patterns=[],
+        enabled_key="profetch",
+        release_asset_name="profetch.exe",
+        show_version=True,
+    ),
     "rekkas_mq": Component(
         id="rekkas_mq",
         name="MQ Install (Rekkas)",

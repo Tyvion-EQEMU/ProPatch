@@ -133,6 +133,26 @@ class SetupWizard(ctk.CTkFrame):
         row.pack(fill="x", pady=3)
         Tooltip(lbl, "This patcher will be copied here, plus all settings and logs will be kept here.")
 
+        shortcut_row = ctk.CTkFrame(parent, fg_color="transparent")
+        shortcut_row.pack(fill="x", pady=3)
+        shortcut_lbl = ctk.CTkLabel(
+            shortcut_row,
+            text="Create Desktop Shortcut",
+            font=ctk.CTkFont(size=12),
+            width=_LABEL_W + _ENTRY_W,
+            anchor="w",
+        )
+        shortcut_lbl.pack(side="left", padx=(8, 0))
+        self._shortcut_var = ctk.BooleanVar(value=True)
+        shortcut_switch = ctk.CTkSwitch(
+            shortcut_row,
+            text="",
+            variable=self._shortcut_var,
+            width=48,
+        )
+        shortcut_switch.pack(side="left", padx=(12, 0))
+        Tooltip(shortcut_lbl, "Place a ProFetch shortcut on your Windows Desktop for quick access.")
+
     # ── MacroQuest ────────────────────────────────────────────────────────────
 
     def _build_mq_section(self, parent) -> None:
@@ -335,8 +355,49 @@ class SetupWizard(ctk.CTkFrame):
         except Exception as exc:
             logger.error(f"Failed to write settings.local.toml: {exc}")
 
+        if self._shortcut_var.get():
+            try:
+                _create_desktop_shortcut()
+                logger.info("Desktop shortcut created: ProFetch on Desktop")
+            except Exception as exc:
+                logger.warning(f"Desktop shortcut creation failed: {exc}")
+
         config.save_gui_settings(self._gui_settings)
         logger.info("First-run setup complete")
         self._app.switch_view("components")
 
 
+# ── Desktop shortcut helper ───────────────────────────────────────────────────
+
+def _create_desktop_shortcut() -> None:
+    """Create a 'ProFetch.lnk' shortcut on the Windows Desktop.
+
+    Only runs when executing as a frozen PyInstaller exe; silently no-ops
+    in dev mode (no exe to point to).
+    """
+    import subprocess
+    import sys
+
+    if not getattr(sys, "frozen", False):
+        return
+
+    exe_path     = Path(sys.executable)
+    shortcut_path = Path.home() / "Desktop" / "ProFetch.lnk"
+    exe_str      = str(exe_path)
+    shortcut_str = str(shortcut_path)
+
+    ps_cmd = (
+        f'$s=(New-Object -COM WScript.Shell).CreateShortcut("{shortcut_str}");'
+        f'$s.TargetPath="{exe_str}";'
+        f'$s.IconLocation="{exe_str},0";'
+        f'$s.Description="ProFetch - EQ Profusion Component Manager";'
+        f'$s.Save()'
+    )
+    result = subprocess.run(
+        ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd],
+        capture_output=True,
+        timeout=10,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.decode(errors="replace").strip()
+        raise RuntimeError(f"PowerShell returned {result.returncode}: {stderr}")

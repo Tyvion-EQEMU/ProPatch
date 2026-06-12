@@ -12,11 +12,12 @@ from profetch import config
 
 logger = logging.getLogger("profetch")
 
-_SECTION_ORDER = ["mq", "server", "custom"]
+_SECTION_ORDER = ["patcher", "mq", "server", "custom"]
 _SECTION_NAMES = {
-    "mq":     "MQ Components",
-    "server": "Server Components",
-    "custom": "User Provided Patching",
+    "patcher": "ProFetch Patcher",
+    "mq":      "MQ Components",
+    "server":  "Server Components",
+    "custom":  "User Provided Patching",
 }
 
 
@@ -205,6 +206,13 @@ class ComponentsView(ctk.CTkFrame):
 
     def _apply_status(self, cid: str, status: str, local: str | None, remote: str | None) -> None:
         if not self.winfo_exists():
+            return
+        if status == "self_update_pending":
+            row = self._rows.get(cid)
+            if row:
+                row.set_status("updated", local, remote)
+            self._refresh_checked_label()
+            self._app.after(1500, self._app.destroy)
             return
         row = self._rows.get(cid)
         if row:
