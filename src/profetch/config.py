@@ -97,3 +97,43 @@ def load_settings():
         ],
         merge_enabled=True,
     )
+
+
+_GUI_DEFAULTS: dict = {
+    "first_run_complete":     False,
+    "profetch_install_path":  r"C:\Games\ProFetch",
+    "install_mq":             True,
+    "install_path":           r"C:\Games\MQ-Rekkas",
+    "eq_instances":           [],
+    "selected_components":    ["rekkas_mq", "mq2rwarp", "rgmercs", "proloot",
+                               "spells_us", "dbstr_us"],
+    "custom_components":      [],
+    "log_level":              "INFO",
+}
+
+
+def _gui_settings_path() -> Path:
+    return get_data_dir() / "gui_settings.json"
+
+
+def load_gui_settings() -> dict:
+    import json
+    ensure_data_dir()
+    path = _gui_settings_path()
+    settings = dict(_GUI_DEFAULTS)
+    if path.exists():
+        try:
+            on_disk = json.loads(path.read_text(encoding="utf-8"))
+            settings.update(on_disk)
+        except Exception:
+            pass
+    return settings
+
+
+def save_gui_settings(settings: dict) -> None:
+    import json
+    ensure_data_dir()
+    _gui_settings_path().write_text(
+        json.dumps(settings, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )

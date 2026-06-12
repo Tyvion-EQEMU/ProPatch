@@ -35,7 +35,8 @@ _ALIASES: dict[str, str] = {
 app = typer.Typer(
     name="profetch",
     help="ProFetch — EQProfusion Component Manager",
-    no_args_is_help=True,
+    no_args_is_help=False,
+    invoke_without_command=True,
 )
 
 
@@ -471,7 +472,17 @@ def version():
     typer.echo(f"ProFetch v{__version__}")
 
 
+def _launch_gui() -> None:
+    from profetch.gui.app import launch
+    launch()
+
+
 def main() -> None:
+    # No subcommand → launch GUI
+    if len(sys.argv) == 1:
+        _launch_gui()
+        return
+
     try:
         if getattr(sys, "frozen", False):
             from profetch.setup import maybe_run_install_wizard
