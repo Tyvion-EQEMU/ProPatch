@@ -79,6 +79,22 @@ def find_release_asset_url(release: dict, filename: str) -> str | None:
     return None
 
 
+async def download_tag_zip(
+    client: httpx.AsyncClient,
+    owner: str,
+    repo: str,
+    tag: str,
+    dest: Path,
+) -> Path:
+    url = f"https://github.com/{owner}/{repo}/archive/refs/tags/{tag}.zip"
+    async with client.stream("GET", url, follow_redirects=True) as r:
+        r.raise_for_status()
+        with open(dest, "wb") as f:
+            async for chunk in r.aiter_bytes(chunk_size=65536):
+                f.write(chunk)
+    return dest
+
+
 async def download_zip(
     client: httpx.AsyncClient,
     owner: str,

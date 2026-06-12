@@ -24,6 +24,7 @@ class Component:
     release_asset_name: str | None = None  # required when tracking == RELEASE_TAG
     zip_subdir: str | None = None  # extract only this subdir from the zip (strips its prefix)
     show_version: bool = False  # also fetch latest release tag for display alongside commit SHA
+    extract_asset: bool = False  # release_tag: extract named asset as zip instead of single-file copy
 
 
 @dataclass

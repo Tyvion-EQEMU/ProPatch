@@ -283,7 +283,7 @@ async def update_one(
                 written, skipped = installer.extract_zip(
                     zip_path, dest_root, component.protected_patterns, component.zip_subdir
                 )
-            else:
+            elif component.release_asset_name:
                 asset_url = github.find_release_asset_url(
                     release_data, component.release_asset_name
                 )
@@ -293,10 +293,26 @@ async def update_one(
                     )
                 file_path = tmp / component.release_asset_name
                 await github.download_file(client, asset_url, file_path)
-                ok = installer.install_single_file(
-                    file_path, dest_root, component.protected_patterns
+                if component.extract_asset:
+                    written, skipped = installer.extract_zip(
+                        file_path, dest_root,
+                        component.protected_patterns, component.zip_subdir,
+                    )
+                else:
+                    ok = installer.install_single_file(
+                        file_path, dest_root, component.protected_patterns
+                    )
+                    written, skipped = (1, 0) if ok else (0, 1)
+            else:
+                # release_tag with no named asset — download the source zip at this tag
+                zip_path = tmp / f"{component.repo}.zip"
+                await github.download_tag_zip(
+                    client, component.owner, component.repo, remote, zip_path
                 )
-                written, skipped = (1, 0) if ok else (0, 1)
+                written, skipped = installer.extract_zip(
+                    zip_path, dest_root,
+                    component.protected_patterns, component.zip_subdir,
+                )
 
     except Exception as exc:
         return _error_result(component, installed_version, remote, str(exc))
