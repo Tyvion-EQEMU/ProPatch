@@ -1,12 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 # PyInstaller spec for proFetch — produces a single standalone profetch.exe
 
+import os
+import customtkinter
+
+CTK_DIR = os.path.dirname(customtkinter.__file__)
+
 a = Analysis(
     ['src/profetch/main.py'],
     pathex=['src'],
     binaries=[],
     datas=[
-        ('assets/profusion_logo_64x64.png', '.'),
+        # GUI banner asset (resolved at runtime via Path(__file__).parent.parent / "assets")
+        ('src/profetch/gui/assets/hero-banner.webp', 'profetch/gui/assets'),
+        # customtkinter themes and images
+        (CTK_DIR, 'customtkinter'),
     ],
     hiddenimports=[
         # tomli is imported conditionally (Python < 3.11) inside manifest.py
@@ -17,6 +25,14 @@ a = Analysis(
         'dynaconf.utils.boxing',
         # aiosqlite uses importlib internally for its connection factory
         'aiosqlite',
+        # GUI dependencies
+        'customtkinter',
+        'PIL',
+        'PIL.Image',
+        'PIL.ImageTk',
+        'tkinter',
+        'tkinter.ttk',
+        'tkinter.filedialog',
     ],
     hookspath=[],
     hooksconfig={},

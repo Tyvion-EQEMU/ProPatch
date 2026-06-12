@@ -483,14 +483,7 @@ def main() -> None:
         _launch_gui()
         return
 
-    try:
-        if getattr(sys, "frozen", False):
-            from profetch.setup import maybe_run_install_wizard
-            maybe_run_install_wizard()
-        app()
-    finally:
-        if getattr(sys, "frozen", False):
-            input("\n  Press Enter to exit...")
+    app()
 
 
 if __name__ == "__main__":
