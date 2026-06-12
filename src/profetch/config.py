@@ -106,7 +106,7 @@ _GUI_DEFAULTS: dict = {
     "install_path":           r"C:\Games\MQ-Rekkas",
     "eq_instances":           [],
     "selected_components":    ["rekkas_mq", "mq2rwarp", "rgmercs", "proloot",
-                               "spells_us", "dbstr_us"],
+                               "spells_us", "dbstr_us", "skillcaps", "basedata", "dinput8"],
     "custom_components":      [],
     "log_level":              "INFO",
 }

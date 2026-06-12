@@ -30,10 +30,14 @@ def _build_gui_manifest() -> list[dict]:
             "description": "",
         })
 
-    # EQ server files — fallback entries; real names/IDs come from remote manifest
+    # EQ server files — mirrored from manifest.toml; section="server" maps to
+    # "Server Components" in the table header
     _EQ_SERVER_FILES = [
-        {"id": "spells_us", "name": "spells_US.txt",  "section": "server", "description": ""},
-        {"id": "dbstr_us",  "name": "dbstr_US.txt",   "section": "server", "description": ""},
+        {"id": "spells_us", "name": "Spells (spells_us.txt)",          "section": "server", "description": ""},
+        {"id": "dbstr_us",  "name": "DB Strings (dbstr_us.txt)",       "section": "server", "description": ""},
+        {"id": "skillcaps", "name": "Skill Caps (SkillCaps.txt)",      "section": "server", "description": ""},
+        {"id": "basedata",  "name": "Base Data (BaseData.txt)",        "section": "server", "description": ""},
+        {"id": "dinput8",   "name": "DirectInput Shim (dinput8.dll)",  "section": "server", "description": ""},
     ]
     result.extend(_EQ_SERVER_FILES)
 
