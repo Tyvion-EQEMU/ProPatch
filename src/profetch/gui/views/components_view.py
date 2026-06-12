@@ -120,17 +120,18 @@ class ComponentsView(ctk.CTkFrame):
                 row.pack(fill="x", pady=1)
                 self._rows[comp["id"]] = row
 
-        self._add_btn = ctk.CTkButton(
-            frame,
-            text="+ Add custom component",
-            fg_color="transparent",
-            border_width=1,
-            border_color=("#aaaaaa", "#555555"),
-            text_color=("#555555", "#aaaaaa"),
-            hover_color=("#eeeeee", "#2a2a2a"),
-            command=self._open_add_dialog,
-        )
-        self._add_btn.pack(fill="x", padx=4, pady=(12, 6))
+        # Hidden for now — custom component support planned for a future release
+        # self._add_btn = ctk.CTkButton(
+        #     frame,
+        #     text="+ Add custom component",
+        #     fg_color="transparent",
+        #     border_width=1,
+        #     border_color=("#aaaaaa", "#555555"),
+        #     text_color=("#555555", "#aaaaaa"),
+        #     hover_color=("#eeeeee", "#2a2a2a"),
+        #     command=self._open_add_dialog,
+        # )
+        # self._add_btn.pack(fill="x", padx=4, pady=(12, 6))
 
         self._list_frame = frame
         return frame
