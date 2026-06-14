@@ -39,10 +39,10 @@ def _emit_status(result: dict, on_status: StatusCallback) -> None:
     vtag   = result.get("version_tag")
 
     if status == "current":
-        ver = _display_ver(result.get("installed"), vtag)
+        ver = _display_ver(result.get("installed"))
         on_status(cid, "current", ver, ver)
     elif status in ("update_available", "not_installed"):
-        local  = _display_ver(result.get("installed"), vtag)
+        local  = _display_ver(result.get("installed"))
         remote = _display_ver(result.get("remote"), vtag)
         on_status(cid, "update_available", local, remote)
     elif status == "untracked":
@@ -60,8 +60,8 @@ def _log_scan_result(r: dict, components: dict) -> None:
     comp   = components.get(cid)
     gh_url = (f"https://github.com/{comp.owner}/{comp.repo}/releases"
               if comp else "")
-    inst   = _display_ver(r.get("installed"), vtag)
-    remote = _display_ver(r.get("remote"),    vtag)
+    inst   = _display_ver(r.get("installed"))
+    remote = _display_ver(r.get("remote"), vtag)
 
     if status == "current":
         msg = f"  {name}: current ({inst})"
