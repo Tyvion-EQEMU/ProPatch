@@ -185,6 +185,7 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
         f"$new_exe   = '{new_str}'",
         f"$exe       = '{exe_str}'",
         "",
+        "# 1. Wait for old process to fully exit",
         "while (Get-Process -Id $target_pid -ErrorAction SilentlyContinue) {",
         "    Start-Sleep -Milliseconds 500",
         "}",
@@ -192,6 +193,8 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
     if meipass:
         mp = meipass.replace("'", "''")
         ps_lines += [
+            "",
+            "# 2. Wait for PyInstaller temp dir to be cleaned up",
             f"$meipass = '{mp}'",
             "while (Test-Path -LiteralPath $meipass) {",
             "    Start-Sleep -Milliseconds 500",
@@ -201,20 +204,43 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
         "",
         "Move-Item -LiteralPath $new_exe -Destination $exe -Force",
         "",
-        "# Retry until the exe is no longer locked (AV scan window)",
+        "# 3. Wait until AV scanners release the new exe",
         "for ($i = 0; $i -lt 60; $i++) {",
         "    try {",
         "        $s = [System.IO.File]::Open($exe, 'Open', 'Read', 'ReadWrite')",
         "        $s.Close(); break",
         "    } catch { Start-Sleep -Milliseconds 500 }",
         "}",
+        "Start-Sleep -Seconds 2",
         "",
-        "Start-Process -FilePath $exe -UseNewEnvironment",
+        "# 4. Launch via WMI — completely detached from our process tree,",
+        "#    no inherited env vars (avoids PyInstaller _MEIPASS pollution)",
+        "$wmi = [wmiclass]'Win32_Process'",
+        "$ret = $wmi.Create($exe)",
+        "if ($ret.ReturnValue -ne 0) {",
+        "    Start-Process -FilePath $exe -UseNewEnvironment",
+        "}",
+        "",
         "Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue",
     ]
 
     ps_path = exe_dir / "profetch_update.ps1"
     ps_path.write_text("\r\n".join(ps_lines), encoding="utf-8")
+
+    # Breadcrumb — read on next successful startup so the result gets logged
+    import json
+    from datetime import datetime as _dt
+    breadcrumb = {
+        "from_version": installed_version or "unknown",
+        "to_version":   remote,
+        "timestamp":    _dt.now().isoformat(),
+    }
+    try:
+        (exe_dir / "update_breadcrumb.json").write_text(
+            json.dumps(breadcrumb), encoding="utf-8"
+        )
+    except Exception:
+        pass
 
     _CREATE_NO_WINDOW = 0x08000000
     subprocess.Popen(

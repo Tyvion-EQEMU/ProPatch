@@ -1,5 +1,6 @@
 from __future__ import annotations
 import asyncio
+import logging
 import customtkinter as ctk
 
 from profetch import config, db, log as plog
@@ -7,10 +8,32 @@ from profetch.gui.views.components_view import ComponentsView
 from profetch.gui.views.log_view import LogView
 from profetch.gui.views.setup_wizard import SetupWizard
 
+logger = logging.getLogger("profetch")
+
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 _TITLE = "ProFetch — EQ Profusion Component Manager"
+
+
+def _check_update_breadcrumb() -> None:
+    import json
+    path = config.get_data_dir() / "update_breadcrumb.json"
+    if not path.exists():
+        return
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        from_v = data.get("from_version", "?")
+        to_v   = data.get("to_version",   "?")
+        ts     = data.get("timestamp",    "?")
+        logger.info(f"Self-update completed successfully: {from_v} → {to_v} (initiated {ts})")
+    except Exception as exc:
+        logger.warning(f"Self-update breadcrumb found but unreadable: {exc}")
+    finally:
+        try:
+            path.unlink()
+        except Exception:
+            pass
 
 
 def _seed_profetch_version() -> None:
@@ -81,6 +104,7 @@ class App(ctk.CTk):
         self.minsize(680, 400)
 
         plog.setup(config.get_data_dir() / "profetch.log")
+        _check_update_breadcrumb()
         _seed_profetch_version()
 
         self._gui_settings = config.load_gui_settings()
