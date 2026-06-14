@@ -168,21 +168,34 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
     logger.info(f"  ProFetch: downloading {remote} from {asset_url}")
     await github.download_file(client, asset_url, new_exe)
 
-    pid     = os.getpid()
-    exe_str = str(exe_path)
-    new_str = str(new_exe)
+    pid      = os.getpid()
+    exe_str  = str(exe_path)
+    new_str  = str(new_exe)
+    meipass  = getattr(sys, "_MEIPASS", None)
 
-    # Loop on the PID so we only move the exe once the old process is gone.
-    # A fixed sleep races with PyInstaller shutdown and loses — the exe stays
-    # locked until the process truly exits.
+    # Wait for PID to disappear, then wait for the old _MEIPASS temp dir to be
+    # fully removed before moving the new exe into place.  Without the second
+    # wait, PyInstaller sees the still-existing temp dir, tries to reuse it,
+    # and then loses the race as the old process cleans it up — producing a
+    # "Failed to load Python DLL" error on the very next launch.
     bat_content = (
         "@echo off\n"
-        ":WAIT\n"
+        ":WAIT_PID\n"
         f'tasklist /fi "PID eq {pid}" 2>nul | find "{pid}" >nul 2>&1\n'
         "if not errorlevel 1 (\n"
         "    timeout /t 1 /nobreak >nul\n"
-        "    goto WAIT\n"
+        "    goto WAIT_PID\n"
         ")\n"
+    )
+    if meipass:
+        bat_content += (
+            ":WAIT_DIR\n"
+            f'if exist "{meipass}" (\n'
+            "    timeout /t 1 /nobreak >nul\n"
+            "    goto WAIT_DIR\n"
+            ")\n"
+        )
+    bat_content += (
         f'move /y "{new_str}" "{exe_str}"\n'
         f'start "" "{exe_str}"\n'
         'del "%~f0"\n'
