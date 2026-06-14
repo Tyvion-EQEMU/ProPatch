@@ -18,6 +18,8 @@ _NARRATIVE = (
     "This setup will walk you through the essentials: where ProFetch lives on your machine, "
     "whether you want MacroQuest managed for you, and where your EverQuest installation(s) are. "
     "You can always revisit these settings later from the main panel.\n\n"
+    "MacroQuest is not required, nor is it built-in to this patcher. "
+    "If you would like to not use MQ or not have it installed, simply toggle it off in the section below.\n\n"
     "Take a moment to review each option below, then hit Finish Setup when you're ready."
 )
 
