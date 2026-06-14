@@ -223,8 +223,10 @@ class ComponentsView(ctk.CTkFrame):
             self._refresh_checked_label()
 
     def _refresh_checked_label(self) -> None:
-        from datetime import datetime
-        ts = datetime.now().strftime("%H:%M:%S")
+        now  = datetime.now()
+        ampm = "a" if now.hour < 12 else "p"
+        hour = int(now.strftime("%I"))
+        ts   = now.strftime(f"%b %d - {hour}:%M{ampm}")
         self._checked_label.configure(text=f"● Last checked: {ts}")
 
     # ── Button handlers ────────────────────────────────────────────────────────

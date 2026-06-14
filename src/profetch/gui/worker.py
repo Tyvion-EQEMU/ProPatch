@@ -168,46 +168,63 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
     logger.info(f"  ProFetch: downloading {remote} from {asset_url}")
     await github.download_file(client, asset_url, new_exe)
 
-    pid      = os.getpid()
-    exe_str  = str(exe_path)
-    new_str  = str(new_exe)
-    meipass  = getattr(sys, "_MEIPASS", None)
+    pid     = os.getpid()
+    exe_str = str(exe_path).replace("'", "''")   # PS single-quote escape
+    new_str = str(new_exe).replace("'", "''")
+    meipass = getattr(sys, "_MEIPASS", None)
 
-    # Wait for PID to disappear, then wait for the old _MEIPASS temp dir to be
-    # fully removed before moving the new exe into place.
-    #
-    # The final relaunch uses PowerShell's Start-Process -UseNewEnvironment so
-    # the new exe gets a registry-fresh environment — not the current process's
-    # environment, which carries PyInstaller's internal env vars (_MEIPASS2 etc).
-    # Without this, the new exe's bootloader sees the inherited temp dir path,
-    # tries to reuse it, and fails with "Failed to load Python DLL".
-    bat_content = (
-        "@echo off\n"
-        ":WAIT_PID\n"
-        f'tasklist /fi "PID eq {pid}" 2>nul | find "{pid}" >nul 2>&1\n'
-        "if not errorlevel 1 (\n"
-        "    timeout /t 1 /nobreak >nul\n"
-        "    goto WAIT_PID\n"
-        ")\n"
-    )
+    # PowerShell script handles the full swap:
+    #   1. Wait for our PID to die (process fully released)
+    #   2. Wait for the old _MEIPASS temp dir to be cleaned up
+    #   3. Move the new exe into place
+    #   4. Wait until the file is readable — AV scanners briefly lock new exes
+    #   5. Launch with -UseNewEnvironment so the new process gets a clean
+    #      registry-based environment, not our PyInstaller-polluted one
+    ps_lines = [
+        f"$target_pid = {pid}",
+        f"$new_exe   = '{new_str}'",
+        f"$exe       = '{exe_str}'",
+        "",
+        "while (Get-Process -Id $target_pid -ErrorAction SilentlyContinue) {",
+        "    Start-Sleep -Milliseconds 500",
+        "}",
+    ]
     if meipass:
-        bat_content += (
-            ":WAIT_DIR\n"
-            f'if exist "{meipass}" (\n'
-            "    timeout /t 1 /nobreak >nul\n"
-            "    goto WAIT_DIR\n"
-            ")\n"
-        )
-    bat_content += (
-        f'move /y "{new_str}" "{exe_str}"\n'
-        f"powershell -NoProfile -NonInteractive -Command \"Start-Process -FilePath '{exe_str}' -UseNewEnvironment\"\n"
-        'del "%~f0"\n'
-    )
-    bat_path.write_text(bat_content, encoding="utf-8")
+        mp = meipass.replace("'", "''")
+        ps_lines += [
+            f"$meipass = '{mp}'",
+            "while (Test-Path -LiteralPath $meipass) {",
+            "    Start-Sleep -Milliseconds 500",
+            "}",
+        ]
+    ps_lines += [
+        "",
+        "Move-Item -LiteralPath $new_exe -Destination $exe -Force",
+        "",
+        "# Retry until the exe is no longer locked (AV scan window)",
+        "for ($i = 0; $i -lt 60; $i++) {",
+        "    try {",
+        "        $s = [System.IO.File]::Open($exe, 'Open', 'Read', 'ReadWrite')",
+        "        $s.Close(); break",
+        "    } catch { Start-Sleep -Milliseconds 500 }",
+        "}",
+        "",
+        "Start-Process -FilePath $exe -UseNewEnvironment",
+        "Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue",
+    ]
+
+    ps_path = exe_dir / "profetch_update.ps1"
+    ps_path.write_text("\r\n".join(ps_lines), encoding="utf-8")
 
     _CREATE_NO_WINDOW = 0x08000000
     subprocess.Popen(
-        ["cmd", "/c", str(bat_path)],
+        [
+            "powershell",
+            "-NoProfile", "-NonInteractive",
+            "-ExecutionPolicy", "Bypass",
+            "-WindowStyle", "Hidden",
+            "-File", str(ps_path),
+        ],
         creationflags=_CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP,
     )
 
@@ -309,6 +326,7 @@ def run_update(
                     if result["status"] == "self_update_pending":
                         logger.info(f"  ProFetch: restarting to apply {new_v}")
                         on_status(cid, "self_update_pending", new_v, new_v)
+                        return  # App will restart; new version handles remaining updates
                     elif result["status"] == "current":
                         logger.info(f"  ProFetch: already current ({new_v})")
                         on_status(cid, "current", new_v, new_v)
