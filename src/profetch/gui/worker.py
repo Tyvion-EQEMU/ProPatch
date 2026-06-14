@@ -174,10 +174,13 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
     meipass  = getattr(sys, "_MEIPASS", None)
 
     # Wait for PID to disappear, then wait for the old _MEIPASS temp dir to be
-    # fully removed before moving the new exe into place.  Without the second
-    # wait, PyInstaller sees the still-existing temp dir, tries to reuse it,
-    # and then loses the race as the old process cleans it up — producing a
-    # "Failed to load Python DLL" error on the very next launch.
+    # fully removed before moving the new exe into place.
+    #
+    # The final relaunch uses PowerShell's Start-Process -UseNewEnvironment so
+    # the new exe gets a registry-fresh environment — not the current process's
+    # environment, which carries PyInstaller's internal env vars (_MEIPASS2 etc).
+    # Without this, the new exe's bootloader sees the inherited temp dir path,
+    # tries to reuse it, and fails with "Failed to load Python DLL".
     bat_content = (
         "@echo off\n"
         ":WAIT_PID\n"
@@ -197,7 +200,7 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
         )
     bat_content += (
         f'move /y "{new_str}" "{exe_str}"\n'
-        f'start "" "{exe_str}"\n'
+        f"powershell -NoProfile -NonInteractive -Command \"Start-Process -FilePath '{exe_str}' -UseNewEnvironment\"\n"
         'del "%~f0"\n'
     )
     bat_path.write_text(bat_content, encoding="utf-8")
