@@ -5,7 +5,7 @@ import tkinter as tk
 from datetime import datetime
 import customtkinter as ctk
 
-from profetch.gui.widgets.component_row import ComponentRow, COL_VER_W, COL_STATUS_W
+from profetch.gui.widgets.component_row import ComponentRow, COL_LAUNCH_W, COL_VER_W, COL_STATUS_W
 from profetch.gui.widgets.header import build_header, _STRIP_BG, _MARGIN
 from profetch.gui.worker import run_status_check, run_update
 from profetch import config
@@ -76,14 +76,15 @@ class ComponentsView(ctk.CTkFrame):
         ctk.CTkLabel(frame, text="NAME", anchor="w", **lbl).grid(
             row=0, column=1, sticky="ew", padx=(0, 6)
         )
+        ctk.CTkLabel(frame, text="", width=COL_LAUNCH_W, fg_color="transparent").grid(row=0, column=2, padx=3)
         ctk.CTkLabel(frame, text="INSTALLED", width=COL_VER_W, anchor="center", **lbl).grid(
-            row=0, column=2, padx=3
-        )
-        ctk.CTkLabel(frame, text="REMOTE", width=COL_VER_W, anchor="center", **lbl).grid(
             row=0, column=3, padx=3
         )
+        ctk.CTkLabel(frame, text="REMOTE", width=COL_VER_W, anchor="center", **lbl).grid(
+            row=0, column=4, padx=3
+        )
         ctk.CTkLabel(frame, text="STATUS", width=COL_STATUS_W, anchor="center", **lbl).grid(
-            row=0, column=4, padx=(18, 6)
+            row=0, column=5, padx=(18, 6)
         )
         return frame
 
@@ -117,6 +118,7 @@ class ComponentsView(ctk.CTkFrame):
                     component=comp,
                     on_checkbox_change=self._on_checkbox_change,
                     checked=comp["id"] in selected,
+                    launch_callback=self._launch_mq if comp["id"] == "rekkas_mq" else None,
                 )
                 row.pack(fill="x", pady=1)
                 self._rows[comp["id"]] = row
@@ -240,6 +242,20 @@ class ComponentsView(ctk.CTkFrame):
             self._status_callback,
             lambda: self._app.after(0, self._refresh_checked_label),
         )
+
+    def _launch_mq(self) -> None:
+        import subprocess
+        from pathlib import Path
+        mq_path = self._gui_settings.get("install_path", r"C:\Games\MQ-Rekkas")
+        exe = Path(mq_path) / "MacroQuest.exe"
+        if not exe.exists():
+            logger.warning(f"MacroQuest.exe not found at {exe}")
+            return
+        try:
+            subprocess.Popen([str(exe)], cwd=str(exe.parent))
+            logger.info(f"Launched MacroQuest: {exe}")
+        except Exception as exc:
+            logger.error(f"Failed to launch MacroQuest: {exc}")
 
     def _on_checkbox_change(self, cid: str, checked: bool) -> None:
         selected: set[str] = set(self._gui_settings.get("selected_components", []))

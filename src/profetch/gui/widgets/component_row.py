@@ -1,6 +1,7 @@
 from __future__ import annotations
 import customtkinter as ctk
 from typing import Callable
+from profetch.gui.widgets.tooltip import Tooltip
 
 # (light_mode_color, dark_mode_color)
 _STATUS_COLORS: dict[str, tuple[str, str]] = {
@@ -26,6 +27,7 @@ _STATUS_LABELS: dict[str, str] = {
 _SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 
 # Column widths — must match _build_column_headers() in components_view.py
+COL_LAUNCH_W = 36   # launch button (rekkas_mq only) / empty placeholder
 COL_VER_W    = 88   # installed / remote version columns
 COL_STATUS_W = 122  # status badge
 
@@ -39,11 +41,13 @@ class ComponentRow(ctk.CTkFrame):
         component: dict,
         on_checkbox_change: Callable[[str, bool], None],
         checked: bool = True,
+        launch_callback: Callable | None = None,
         **kwargs,
     ):
         super().__init__(parent, fg_color="transparent", **kwargs)
         self._component = component
         self._on_checkbox_change = on_checkbox_change
+        self._launch_callback = launch_callback
         self._status = "idle"
         self._spinner_idx = 0
         self._spinner_after_id: str | None = None
@@ -68,7 +72,27 @@ class ComponentRow(ctk.CTkFrame):
         )
         self._name_label.grid(row=0, column=1, sticky="ew", padx=(0, 6), pady=7)
 
-        # col 2 — installed version
+        # col 2 — launch button (rekkas_mq only) or empty placeholder
+        if self._launch_callback is not None:
+            btn = ctk.CTkButton(
+                self,
+                text="▶",
+                width=COL_LAUNCH_W,
+                height=COL_LAUNCH_W,
+                fg_color=("#2e7d32", "#1b5e20"),
+                hover_color=("#43a047", "#2e7d32"),
+                corner_radius=4,
+                font=ctk.CTkFont(size=13),
+                command=self._launch_callback,
+            )
+            btn.grid(row=0, column=2, padx=3, pady=7)
+            Tooltip(btn, "Launch MQ Now")
+        else:
+            ctk.CTkLabel(self, text="", width=COL_LAUNCH_W, fg_color="transparent").grid(
+                row=0, column=2, padx=3, pady=7
+            )
+
+        # col 3 — installed version
         self._local_label = ctk.CTkLabel(
             self,
             text="—",
@@ -77,9 +101,9 @@ class ComponentRow(ctk.CTkFrame):
             text_color=("#555555", "#aaaaaa"),
             anchor="center",
         )
-        self._local_label.grid(row=0, column=2, padx=3, pady=7)
+        self._local_label.grid(row=0, column=3, padx=3, pady=7)
 
-        # col 3 — remote version
+        # col 4 — remote version
         self._remote_label = ctk.CTkLabel(
             self,
             text="—",
@@ -88,9 +112,9 @@ class ComponentRow(ctk.CTkFrame):
             text_color=("#555555", "#aaaaaa"),
             anchor="center",
         )
-        self._remote_label.grid(row=0, column=3, padx=3, pady=7)
+        self._remote_label.grid(row=0, column=4, padx=3, pady=7)
 
-        # col 4 — status badge
+        # col 5 — status badge
         self._status_badge = ctk.CTkLabel(
             self,
             text="—",
@@ -100,11 +124,11 @@ class ComponentRow(ctk.CTkFrame):
             fg_color=_STATUS_COLORS["idle"],
             text_color=("white", "white"),
         )
-        self._status_badge.grid(row=0, column=4, padx=(18, 6), pady=7)
+        self._status_badge.grid(row=0, column=5, padx=(18, 6), pady=7)
 
         # separator
         ctk.CTkFrame(self, height=1, fg_color=("#e0e0e0", "#2a2a2a")).grid(
-            row=1, column=0, columnspan=5, sticky="ew", padx=6
+            row=1, column=0, columnspan=6, sticky="ew", padx=6
         )
 
     def _on_check(self) -> None:
