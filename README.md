@@ -34,7 +34,7 @@ None of the components pre-configured with this patcher are required nor install
 
 > See **[docs/getting-started.md](docs/getting-started.md)** for a full walkthrough with screenshots.
 
-<p align="center"><img width="350" alt="Profusion_Patcher_Setup_Wizard" src="https://github.com/user-attachments/assets/c98a0c02-7b3a-4363-b751-2f8b5fc2ed11" /></p>
+<p align="center"><img width="350" alt="Profusion_Patcher_Setup_Wizard" src="https://github.com/user-attachments/assets/ebc7828e-5da4-4cd2-a0c0-d2cc47aef574" /></p>
 
 ---
 
