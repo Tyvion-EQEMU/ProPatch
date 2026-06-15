@@ -1,7 +1,26 @@
 ﻿from __future__ import annotations
 
-import asyncio
 import sys
+
+# ── Frozen-exe CLI: re-attach to parent console BEFORE any other imports ──────
+# console=False builds get no stdio from Windows even when launched from a
+# terminal. Re-attach here so that rich, typer, and click all see real handles
+# when they initialise below (rich captures sys.stdout at Console() time).
+if (
+    sys.platform == "win32"
+    and getattr(sys, "frozen", False)
+    and len(sys.argv) > 1
+):
+    import ctypes
+    if ctypes.windll.kernel32.AttachConsole(-1):  # ATTACH_PARENT_PROCESS
+        try:
+            sys.stdout = open("CONOUT$", "w", encoding="utf-8", errors="replace")
+            sys.stderr = open("CONOUT$", "w", encoding="utf-8", errors="replace")
+            sys.stdin  = open("CONIN$",  "r", encoding="utf-8", errors="replace")
+        except OSError:
+            pass
+
+import asyncio
 from pathlib import Path
 
 # Ensure the terminal can display Unicode (e.g., ✓ ↑ ✗) on Windows
@@ -477,33 +496,11 @@ def _launch_gui() -> None:
     launch()
 
 
-def _reattach_console() -> None:
-    """Re-attach stdio to the parent terminal in a frozen console=False build.
-
-    Without this, sys.stdin/stdout/stderr are None when the exe is launched
-    from a terminal with CLI args, because Windows treats console=False exes
-    as GUI apps and doesn't inherit the parent console handles.
-    """
-    import ctypes
-    if not ctypes.windll.kernel32.AttachConsole(-1):  # ATTACH_PARENT_PROCESS
-        return
-    try:
-        sys.stdout = open("CONOUT$", "w", encoding="utf-8", errors="replace")
-        sys.stderr = open("CONOUT$", "w", encoding="utf-8", errors="replace")
-        sys.stdin  = open("CONIN$",  "r", encoding="utf-8", errors="replace")
-    except OSError:
-        pass
-
-
 def main() -> None:
     # No subcommand → launch GUI
     if len(sys.argv) == 1:
         _launch_gui()
         return
-
-    # CLI mode: re-attach to parent console in frozen console=False builds
-    if sys.platform == "win32" and getattr(sys, "frozen", False):
-        _reattach_console()
 
     app()
 
