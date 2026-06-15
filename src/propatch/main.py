@@ -477,11 +477,33 @@ def _launch_gui() -> None:
     launch()
 
 
+def _reattach_console() -> None:
+    """Re-attach stdio to the parent terminal in a frozen console=False build.
+
+    Without this, sys.stdin/stdout/stderr are None when the exe is launched
+    from a terminal with CLI args, because Windows treats console=False exes
+    as GUI apps and doesn't inherit the parent console handles.
+    """
+    import ctypes
+    if not ctypes.windll.kernel32.AttachConsole(-1):  # ATTACH_PARENT_PROCESS
+        return
+    try:
+        sys.stdout = open("CONOUT$", "w", encoding="utf-8", errors="replace")
+        sys.stderr = open("CONOUT$", "w", encoding="utf-8", errors="replace")
+        sys.stdin  = open("CONIN$",  "r", encoding="utf-8", errors="replace")
+    except OSError:
+        pass
+
+
 def main() -> None:
     # No subcommand → launch GUI
     if len(sys.argv) == 1:
         _launch_gui()
         return
+
+    # CLI mode: re-attach to parent console in frozen console=False builds
+    if sys.platform == "win32" and getattr(sys, "frozen", False):
+        _reattach_console()
 
     app()
 
