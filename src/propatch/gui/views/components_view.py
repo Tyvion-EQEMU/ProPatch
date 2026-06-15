@@ -248,7 +248,11 @@ class ComponentsView(ctk.CTkFrame):
     def _launch_mq(self) -> None:
         import subprocess
         from pathlib import Path
-        mq_path = self._gui_settings.get("install_path", r"C:\Games\MQ-Profusion")
+        from propatch import config
+        try:
+            mq_path = str(config.load_settings().PATHS.mq_rekkas)
+        except Exception:
+            mq_path = r"C:\Games\MQ-Profusion"
         exe = Path(mq_path) / "MacroQuest.exe"
         if not exe.exists():
             logger.warning(f"MacroQuest.exe not found at {exe}")

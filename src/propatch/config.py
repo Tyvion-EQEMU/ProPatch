@@ -91,8 +91,9 @@ _GUI_DEFAULTS: dict = {
     "first_run_complete":     False,
     "propatch_install_path":  r"C:\Games\ProPatch",
     "install_mq":             True,
-    "install_path":           r"C:\Games\MQ-Profusion",
-    "eq_instances":           [],
+    # MQ path and EQ dirs are intentionally NOT stored here — read directly
+    # from settings.local.toml via load_settings() so GUI and CLI always
+    # share the same source of truth.
     "selected_components":    ["propatch",
                                "rekkas_mq", "mq2rwarp", "rgmercs", "proloot",
                                "spells_us", "dbstr_us", "skillcaps", "basedata", "dinput8"],

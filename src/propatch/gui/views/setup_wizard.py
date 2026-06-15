@@ -39,6 +39,37 @@ class SetupWizard(ctk.CTkFrame):
         self._eq_rows: list[dict] = []
         self._mq_path_frame: ctk.CTkFrame | None = None
         self._banner_h = 0
+
+        # Load current path/token settings from settings.local.toml so that
+        # GUI and CLI always share the same source of truth.
+        self._current_mq_path   = r"C:\Games\MQ-Profusion"
+        self._current_eq_instances: list[dict] = []
+        self._current_token     = ""
+        try:
+            _s = config.load_settings()
+            try:
+                self._current_mq_path = str(_s.PATHS.mq_rekkas)
+            except Exception:
+                pass
+            try:
+                _dirs = _s.get("PATHS.eq_dirs", default=[])
+                if isinstance(_dirs, str):
+                    _dirs = [_dirs]
+                _dirs = [str(d) for d in _dirs if d]
+                _names = _s.get("PATHS.eq_dir_names", default=[])
+                if isinstance(_names, str):
+                    _names = [_names]
+                _names = list(_names)
+                self._current_eq_instances = [
+                    {"path": _dirs[i], "name": _names[i] if i < len(_names) else ""}
+                    for i in range(len(_dirs))
+                ]
+            except Exception:
+                pass
+            self._current_token = config.get_github_token(_s) or ""
+        except Exception:
+            pass
+
         self._build()
         self._fit_window()
 
@@ -167,16 +198,7 @@ class SetupWizard(ctk.CTkFrame):
         lbl.pack(side="left", padx=(8, 0))
 
         # Pre-fill from existing settings if present
-        existing_token = ""
-        try:
-            s = config.load_settings()
-            val = config.get_github_token(s)
-            if val:
-                existing_token = val
-        except Exception:
-            pass
-
-        self._token_var = tk.StringVar(value=existing_token)
+        self._token_var = tk.StringVar(value=self._current_token)
         ctk.CTkEntry(row, textvariable=self._token_var, width=_ENTRY_W,
                      placeholder_text="ghp_…  (raises limit to 5000 req/hr)",
                      show="").pack(side="left", padx=(6, 4))
@@ -214,7 +236,7 @@ class SetupWizard(ctk.CTkFrame):
         self._mq_path_frame, _ = self._make_path_row(
             parent,
             label="MQ Install Path",
-            default=self._gui_settings.get("install_path", r"C:\Games\MQ-Profusion"),
+            default=self._current_mq_path,
             setting_key="install_path",
         )
         if self._mq_var.get():
@@ -232,27 +254,7 @@ class SetupWizard(ctk.CTkFrame):
         self._eq_container = ctk.CTkFrame(parent, fg_color="transparent")
         self._eq_container.pack(fill="x")
 
-        existing = self._gui_settings.get("eq_instances", [])
-
-        # Fall back to settings.local.toml when gui_settings hasn't been saved yet
-        if not existing:
-            try:
-                from propatch import config as _cfg
-                _s = _cfg.load_settings()
-                _dirs = _s.get("PATHS.eq_dirs", default=[])
-                if isinstance(_dirs, str):
-                    _dirs = [_dirs]
-                _dirs = [str(d) for d in _dirs if d]
-                _names = _s.get("PATHS.eq_dir_names", default=[])
-                if isinstance(_names, str):
-                    _names = [_names]
-                _names = list(_names)
-                existing = [
-                    {"path": _dirs[i], "name": _names[i] if i < len(_names) else ""}
-                    for i in range(len(_dirs))
-                ]
-            except Exception:
-                pass
+        existing = self._current_eq_instances
 
         if existing:
             for inst in existing:
@@ -385,9 +387,6 @@ class SetupWizard(ctk.CTkFrame):
         self._gui_settings["first_run_complete"]    = True
         self._gui_settings["propatch_install_path"] = getattr(self, "_var_propatch_install_path").get().strip()
         self._gui_settings["install_mq"]            = self._mq_var.get()
-        self._gui_settings["install_path"]          = (
-            getattr(self, "_var_install_path").get().strip() if self._mq_var.get() else ""
-        )
 
         selected = set(self._gui_settings.get("selected_components", []))
         if not self._mq_var.get():
@@ -407,12 +406,13 @@ class SetupWizard(ctk.CTkFrame):
                 if name:
                     entry["name"] = name
                 instances.append(entry)
-        self._gui_settings["eq_instances"] = instances
 
-        # Write TOML settings (paths + optional token) so the backend can pick them up
+        mq_rekkas = getattr(self, "_var_install_path").get().strip() or r"C:\Games\MQ-Profusion"
+
+        # Write TOML settings (paths + optional token) — single source of truth
         try:
             config.save_path_settings(
-                mq_rekkas=self._gui_settings.get("install_path", r"C:\Games\MQ-Profusion"),
+                mq_rekkas=mq_rekkas,
                 eq_instances=instances,
                 github_token=self._token_var.get().strip(),
             )
