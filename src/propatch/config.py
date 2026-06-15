@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 import shutil
 import sys
@@ -28,22 +27,11 @@ always = ["config/*", "MacroQuest.ini"]
 
 
 def get_data_dir() -> Path:
-    # When packaged as a PyInstaller exe, data lives in the same folder as the exe
-    if getattr(sys, "frozen", False):
-        return Path(sys.executable).parent
-
-    # Dev / editable install — use a separate dev directory so test data
-    # never collides with a real production install
-    if os.name == "nt":
-        public = os.environ.get("PUBLIC", r"C:\Users\Public")
-        return Path(public) / "proFetch-dev"
-
-    import platformdirs
-    return Path(platformdirs.user_data_dir("proFetch-dev"))
+    return Path(sys.executable).parent
 
 
 def get_db_path() -> Path:
-    return get_data_dir() / "profetch.db"
+    return get_data_dir() / "propatch.db"
 
 
 def ensure_data_dir() -> Path:
@@ -90,7 +78,7 @@ def load_settings():
 
     data_dir = ensure_data_dir()
     return Dynaconf(
-        envvar_prefix="PROFETCH",
+        envvar_prefix="PROPATCH",
         settings_files=[
             str(data_dir / "settings.toml"),
             str(data_dir / "settings.local.toml"),
@@ -101,11 +89,11 @@ def load_settings():
 
 _GUI_DEFAULTS: dict = {
     "first_run_complete":     False,
-    "profetch_install_path":  r"C:\Games\ProFetch",
+    "propatch_install_path":  r"C:\Games\ProPatch",
     "install_mq":             True,
     "install_path":           r"C:\Games\MQ-Profusion",
     "eq_instances":           [],
-    "selected_components":    ["profetch",
+    "selected_components":    ["propatch",
                                "rekkas_mq", "mq2rwarp", "rgmercs", "proloot",
                                "spells_us", "dbstr_us", "skillcaps", "basedata", "dinput8"],
     "custom_components":      [],

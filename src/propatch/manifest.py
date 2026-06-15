@@ -1,13 +1,13 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import sys
 
 import httpx
 
-from profetch.components import Component, EqFile, TrackingMethod
+from propatch.components import Component, EqFile, TrackingMethod
 
 MANIFEST_URL = (
-    "https://raw.githubusercontent.com/Tyvion-EQEMU/profetch-manifest/main/manifest.toml"
+    "https://raw.githubusercontent.com/Tyvion-EQEMU/propatch-manifest/main/manifest.toml"
 )
 
 

@@ -1,20 +1,20 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import logging
 import threading
 import tkinter as tk
 from datetime import datetime
 import customtkinter as ctk
 
-from profetch.gui.widgets.component_row import ComponentRow, COL_LAUNCH_W, COL_VER_W, COL_STATUS_W
-from profetch.gui.widgets.header import build_header, _STRIP_BG, _MARGIN
-from profetch.gui.worker import run_status_check, run_update
-from profetch import config
+from propatch.gui.widgets.component_row import ComponentRow, COL_LAUNCH_W, COL_VER_W, COL_STATUS_W
+from propatch.gui.widgets.header import build_header, _STRIP_BG, _MARGIN
+from propatch.gui.worker import run_status_check, run_update
+from propatch import config
 
-logger = logging.getLogger("profetch")
+logger = logging.getLogger("propatch")
 
 _SECTION_ORDER = ["patcher", "mq", "server", "custom"]
 _SECTION_NAMES = {
-    "patcher": "ProFetch Patcher",
+    "patcher": "ProPatch Patcher",
     "mq":      "MQ Components",
     "server":  "Server Components",
     "custom":  "User Provided Patching",

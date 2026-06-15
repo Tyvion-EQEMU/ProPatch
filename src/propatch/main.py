@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import asyncio
 import sys
@@ -15,9 +15,9 @@ if sys.platform == "win32":
 import httpx
 import typer
 
-from profetch.__about__ import __version__
-from profetch import config, db, log as plog, ui, updater
-from profetch.components import COMPONENTS, Component, EqFile
+from propatch.__about__ import __version__
+from propatch import config, db, log as plog, ui, updater
+from propatch.components import COMPONENTS, Component, EqFile
 
 # Short aliases the user can type on the CLI
 _ALIASES: dict[str, str] = {
@@ -33,8 +33,8 @@ _ALIASES: dict[str, str] = {
 }
 
 app = typer.Typer(
-    name="profetch",
-    help="ProFetch — EQProfusion Component Manager",
+    name="propatch",
+    help="ProPatch — EQ Profusion Component Manager",
     no_args_is_help=False,
     invoke_without_command=True,
 )
@@ -65,7 +65,7 @@ def _get_eq_dirs(settings) -> list[Path]:
 async def _load_manifest(client: httpx.AsyncClient) -> tuple[dict[str, Component], list[EqFile]]:
     """Fetch the manifest; fall back to hardcoded COMPONENTS on failure."""
     try:
-        from profetch.manifest import fetch_manifest
+        from propatch.manifest import fetch_manifest
         components_list, eq_files = await fetch_manifest(client)
         components = {c.id: c for c in components_list}
         return components, eq_files
@@ -80,13 +80,13 @@ def status():
     settings = config.load_settings()
     config.ensure_data_dir()
     db_path = config.get_db_path()
-    plog.setup(config.get_data_dir() / "profetch.log")
+    plog.setup(config.get_data_dir() / "propatch.log")
 
     asyncio.run(_status_async(db_path, settings))
 
 
 def _build_config_info(settings) -> dict:
-    from profetch.config import get_data_dir
+    from propatch.config import get_data_dir
     try:
         mq_path = Path(settings.PATHS.mq_rekkas)
     except Exception:
@@ -116,7 +116,7 @@ async def _status_async(db_path: Path, settings) -> None:
 
     github_token = config.get_github_token(settings)
     timeout = httpx.Timeout(connect=30.0, read=60.0, write=None, pool=30.0)
-    from profetch import github as gh
+    from propatch import github as gh
     async with httpx.AsyncClient(timeout=timeout, headers=gh.auth_headers(github_token)) as client:
         components, eq_files = await _load_manifest(client)
 
@@ -173,7 +173,7 @@ def update(
         mq_rekkas = Path(r"C:\Games\MQ-Profusion")
 
     eq_dirs = _get_eq_dirs(settings)
-    plog.setup(config.get_data_dir() / "profetch.log")
+    plog.setup(config.get_data_dir() / "propatch.log")
 
     if component is not None:
         cid = _ALIASES.get(component.lower())
@@ -194,7 +194,7 @@ def update_eq():
     db_path = config.get_db_path()
     eq_dirs = _get_eq_dirs(settings)
 
-    plog.setup(config.get_data_dir() / "profetch.log")
+    plog.setup(config.get_data_dir() / "propatch.log")
 
     if not eq_dirs:
         ui.print_error(
@@ -235,7 +235,7 @@ async def _update_async(
     ui.print_header(__version__)
 
     github_token = config.get_github_token(settings)
-    from profetch import github as gh
+    from propatch import github as gh
     timeout = httpx.Timeout(connect=30.0, read=None, write=None, pool=30.0)
     updated = current = errors = 0
 
@@ -404,7 +404,7 @@ def components():
     """Interactively enable or disable managed components."""
     settings = config.load_settings()
     config.ensure_data_dir()
-    plog.setup(config.get_data_dir() / "profetch.log")
+    plog.setup(config.get_data_dir() / "propatch.log")
     asyncio.run(_components_async(settings))
 
 
@@ -412,7 +412,7 @@ async def _components_async(settings) -> None:
     ui.print_header(__version__)
 
     github_token = config.get_github_token(settings)
-    from profetch import github as gh
+    from propatch import github as gh
     timeout = httpx.Timeout(connect=30.0, read=60.0, write=None, pool=30.0)
     async with httpx.AsyncClient(timeout=timeout, headers=gh.auth_headers(github_token)) as client:
         all_components, _ = await _load_manifest(client)
@@ -455,25 +455,25 @@ async def _components_async(settings) -> None:
             ui.console.print("  [red]Please enter a number.[/red]\n")
 
     config.save_component_settings(config.get_data_dir(), enabled)
-    ui.console.print("  [green]Saved.[/green] Run [bold white]profetch status[/bold white] to verify.\n")
+    ui.console.print("  [green]Saved.[/green] Run [bold white]propatch status[/bold white] to verify.\n")
 
 
 @app.command()
 def setup():
-    """Reconfigure ProFetch paths and settings."""
-    from profetch.setup import run_setup
+    """Reconfigure ProPatch paths and settings."""
+    from propatch.setup import run_setup
     config.ensure_data_dir()
     run_setup(config.get_data_dir())
 
 
 @app.command()
 def version():
-    """Show ProFetch version."""
-    typer.echo(f"ProFetch v{__version__}")
+    """Show ProPatch version."""
+    typer.echo(f"ProPatch v{__version__}")
 
 
 def _launch_gui() -> None:
-    from profetch.gui.app import launch
+    from propatch.gui.app import launch
     launch()
 
 

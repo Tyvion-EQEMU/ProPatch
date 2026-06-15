@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import tkinter as tk
 import webbrowser
 from pathlib import Path
@@ -10,7 +10,7 @@ try:
 except ImportError:
     _PIL_AVAILABLE = False
 
-from profetch.__about__ import __version__
+from propatch.__about__ import __version__
 
 _ASSETS_DIR = Path(__file__).parent.parent / "assets"
 _WARM_GOLD  = "#FFB833"
@@ -63,11 +63,14 @@ def build_header(parent: ctk.CTkFrame) -> tuple[ctk.CTkFrame, int]:
 
     line1 = tk.Frame(left_group, bg=_STRIP_BG)
     line1.pack(side="top", anchor="w")
-    tk.Label(line1, text="ProFetch",
+    tk.Label(line1, text="ProPatch",
              font=("Consolas", 14, "bold"), fg=_WARM_GOLD, bg=_STRIP_BG,
              padx=0, pady=0).pack(side="left")
     tk.Label(line1, text=f"  v{__version__}",
              font=("Consolas", 10), fg=_WARM_GOLD, bg=_STRIP_BG,
+             padx=0, pady=0).pack(side="left")
+    tk.Label(line1, text="  [BETA]",
+             font=("Consolas", 10, "bold"), fg="#ff8c00", bg=_STRIP_BG,
              padx=0, pady=0).pack(side="left")
 
     line2 = tk.Frame(left_group, bg=_STRIP_BG)

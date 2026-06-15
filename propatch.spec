@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-# PyInstaller spec for proFetch — produces a single standalone profetch.exe
+# PyInstaller spec for ProPatch — produces a single standalone propatch.exe
 
 import os
 import customtkinter
@@ -7,12 +7,12 @@ import customtkinter
 CTK_DIR = os.path.dirname(customtkinter.__file__)
 
 a = Analysis(
-    ['src/profetch/main.py'],
+    ['src/propatch/main.py'],
     pathex=['src'],
     binaries=[],
     datas=[
         # GUI banner asset (resolved at runtime via Path(__file__).parent.parent / "assets")
-        ('src/profetch/gui/assets/hero-banner.webp', 'profetch/gui/assets'),
+        ('src/propatch/gui/assets/hero-banner.webp', 'propatch/gui/assets'),
         # customtkinter themes and images
         (CTK_DIR, 'customtkinter'),
     ],
@@ -50,7 +50,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='profetch',
+    name='propatch',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

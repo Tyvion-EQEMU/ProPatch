@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import asyncio
 import hashlib
@@ -8,8 +8,8 @@ from pathlib import Path
 
 import httpx
 
-from profetch import db, github, installer
-from profetch.components import COMPONENTS, Component, EqFile, TrackingMethod
+from propatch import db, github, installer
+from propatch.components import COMPONENTS, Component, EqFile, TrackingMethod
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ def _is_on_disk(component: Component, mq_rekkas: Path) -> bool:
         return dest.is_dir() and any(dest.iterdir())
 
 
-# ── Status checks (used by `profetch status`) ────────────────────────────────
+# ── Status checks (used by `propatch status`) ────────────────────────────────
 
 async def _check_one(
     client: httpx.AsyncClient,
@@ -198,7 +198,7 @@ async def get_eq_file_statuses(
     return list(results)
 
 
-# ── Update logic (used by `profetch update`) ──────────────────────────────────
+# ── Update logic (used by `propatch update`) ──────────────────────────────────
 
 def _error_result(
     component: Component,

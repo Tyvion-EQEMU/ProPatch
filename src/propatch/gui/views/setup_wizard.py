@@ -1,21 +1,21 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import logging
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog
 import customtkinter as ctk
 
-from profetch import config
-from profetch.gui.widgets.header import build_header, _WARM_GOLD, _STRIP_BG, _MARGIN
-from profetch.gui.widgets.tooltip import Tooltip
+from propatch import config
+from propatch.gui.widgets.header import build_header, _WARM_GOLD, _STRIP_BG, _MARGIN
+from propatch.gui.widgets.tooltip import Tooltip
 
-logger = logging.getLogger("profetch")
+logger = logging.getLogger("propatch")
 
 _MQ_COMPONENTS = {"rekkas_mq", "mq2rwarp", "rgmercs", "proloot"}
 
 _NARRATIVE = (
-    "Welcome to ProFetch — the EQ Profusion component manager.\n\n"
-    "This setup will walk you through the essentials: where ProFetch lives on your machine, "
+    "Welcome to ProPatch — the EQ Profusion component manager.\n\n"
+    "This setup will walk you through the essentials: where ProPatch lives on your machine, "
     "whether you want MacroQuest managed for you, and where your EverQuest installation(s) are. "
     "You can always revisit these settings later from the main panel.\n\n"
     "MacroQuest is not required, nor is it built-in to this patcher. "
@@ -93,8 +93,8 @@ class SetupWizard(ctk.CTkFrame):
         scroll = ctk.CTkScrollableFrame(self, fg_color=("gray92", "gray14"), corner_radius=0)
         scroll.grid_columnconfigure(0, weight=1)
 
-        self._build_section_header(scroll, "ProFetch")
-        self._build_profetch_path(scroll)
+        self._build_section_header(scroll, "ProPatch")
+        self._build_propatch_path(scroll)
         self._build_github_token(scroll)
 
         self._build_section_header(scroll, "MacroQuest")
@@ -124,14 +124,14 @@ class SetupWizard(ctk.CTkFrame):
             row=0, column=1, sticky="ew", padx=(0, 4)
         )
 
-    # ── ProFetch install path ─────────────────────────────────────────────────
+    # ── ProPatch install path ─────────────────────────────────────────────────
 
-    def _build_profetch_path(self, parent) -> None:
+    def _build_propatch_path(self, parent) -> None:
         row, lbl = self._make_path_row(
             parent,
-            label="ProFetch Install Path",
-            default=self._gui_settings.get("profetch_install_path", r"C:\Games\ProFetch"),
-            setting_key="profetch_install_path",
+            label="ProPatch Install Path",
+            default=self._gui_settings.get("propatch_install_path", r"C:\Games\ProPatch"),
+            setting_key="propatch_install_path",
         )
         row.pack(fill="x", pady=3)
         Tooltip(lbl, "This patcher will be copied here, plus all settings and logs will be kept here.")
@@ -154,7 +154,7 @@ class SetupWizard(ctk.CTkFrame):
             width=48,
         )
         shortcut_switch.pack(side="left", padx=(12, 0))
-        Tooltip(shortcut_lbl, "Place a ProFetch shortcut on your Windows Desktop for quick access.")
+        Tooltip(shortcut_lbl, "Place a ProPatch shortcut on your Windows Desktop for quick access.")
 
     # ── GitHub token ─────────────────────────────────────────────────────────
 
@@ -353,7 +353,7 @@ class SetupWizard(ctk.CTkFrame):
 
     def _finish(self) -> None:
         self._gui_settings["first_run_complete"]    = True
-        self._gui_settings["profetch_install_path"] = getattr(self, "_var_profetch_install_path").get().strip()
+        self._gui_settings["propatch_install_path"] = getattr(self, "_var_propatch_install_path").get().strip()
         self._gui_settings["install_mq"]            = self._mq_var.get()
         self._gui_settings["install_path"]          = (
             getattr(self, "_var_install_path").get().strip() if self._mq_var.get() else ""
@@ -393,7 +393,7 @@ class SetupWizard(ctk.CTkFrame):
         if self._shortcut_var.get():
             try:
                 _create_desktop_shortcut()
-                logger.info("Desktop shortcut created: ProFetch on Desktop")
+                logger.info("Desktop shortcut created: ProPatch on Desktop")
             except Exception as exc:
                 logger.warning(f"Desktop shortcut creation failed: {exc}")
 
@@ -405,7 +405,7 @@ class SetupWizard(ctk.CTkFrame):
 # ── Desktop shortcut helper ───────────────────────────────────────────────────
 
 def _create_desktop_shortcut() -> None:
-    """Create a 'ProFetch.lnk' shortcut on the Windows Desktop.
+    """Create a 'ProPatch.lnk' shortcut on the Windows Desktop.
 
     Only runs when executing as a frozen PyInstaller exe; silently no-ops
     in dev mode (no exe to point to).
@@ -417,7 +417,7 @@ def _create_desktop_shortcut() -> None:
         return
 
     exe_path     = Path(sys.executable)
-    shortcut_path = Path.home() / "Desktop" / "ProFetch.lnk"
+    shortcut_path = Path.home() / "Desktop" / "ProPatch.lnk"
     exe_str      = str(exe_path)
     shortcut_str = str(shortcut_path)
 
@@ -425,7 +425,7 @@ def _create_desktop_shortcut() -> None:
         f'$s=(New-Object -COM WScript.Shell).CreateShortcut("{shortcut_str}");'
         f'$s.TargetPath="{exe_str}";'
         f'$s.IconLocation="{exe_str},0";'
-        f'$s.Description="ProFetch - EQ Profusion Component Manager";'
+        f'$s.Description="ProPatch - EQ Profusion Component Manager";'
         f'$s.Save()'
     )
     result = subprocess.run(

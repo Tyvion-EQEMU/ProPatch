@@ -1,22 +1,21 @@
-# CLI Reference
+﻿# CLI Reference
 
-ProFetch includes a command-line interface for power users, scripting, or headless environments. Running `profetch` with no arguments opens the GUI. Any subcommand skips the GUI entirely.
+ProPatch includes a command-line interface for power users, scripting, or headless environments. Running `propatch` with no arguments opens the GUI. Any subcommand skips the GUI entirely.
 
 ---
 
 ## Commands
 
-### `profetch status`
+### `propatch status`
 
 Shows installed vs. remote versions for all enabled components, plus your current path configuration.
 
-```
-profetch status
+```\npropatch status
 ```
 
 **Example output:**
 ```
-  ProFetch         v0.5.6     current
+  ProPatch         v0.5.6     current
   MQ Install       v3.1.0     current
   MQ2RWarp         v1.2.0     update available  →  v1.3.0
   RGMercs          v2.4.1     current
@@ -27,21 +26,19 @@ profetch status
 
 ---
 
-### `profetch update`
+### `propatch update`
 
 Updates all enabled components that are out of date. Shows a pre-flight summary and asks for confirmation before downloading anything.
 
-```
-profetch update
+```\npropatch update
 ```
 
 To update a **single component**, pass its name or alias:
 
-```
-profetch update rekkas      # MQ binary
-profetch update mq2rwarp    # or: rwarp
-profetch update rgmercs     # or: mercs
-profetch update proloot     # or: loot, e9loot
+```\npropatch update rekkas      # MQ binary
+ProPatch update mq2rwarp    # or: rwarp
+ProPatch update rgmercs     # or: mercs
+ProPatch update proloot     # or: loot, e9loot
 ```
 
 **Component aliases:**
@@ -55,35 +52,32 @@ profetch update proloot     # or: loot, e9loot
 
 ---
 
-### `profetch update-eq`
+### `propatch update-eq`
 
 Updates EQ server-specific files only (`spells_us.txt`, `dbstr_us.txt`, etc.) across all configured EQ directories. Useful if you only want to sync server files without touching MQ.
 
-```
-profetch update-eq
+```\npropatch update-eq
 ```
 
 Requires at least one `eq_dirs` entry in `settings.local.toml`. See [Configuration](configuration.md).
 
 ---
 
-### `profetch version`
+### `propatch version`
 
-Prints the running ProFetch version.
+Prints the running ProPatch version.
 
-```
-profetch version
-# → ProFetch v0.5.6
+```\npropatch version
+# → ProPatch v0.5.6
 ```
 
 ---
 
-### `profetch setup`
+### `propatch setup`
 
 Re-runs path configuration (CLI version). Prompts for your MQ install path and EQ directories, then writes `settings.local.toml`. Equivalent to **Re-run Setup** in the GUI, but text-based.
 
-```
-profetch setup
+```\npropatch setup
 ```
 
 ---
@@ -93,7 +87,7 @@ profetch setup
 - **No args** → launches the GUI
 - **GitHub token** — if configured, used automatically for all API calls. See [Configuration](configuration.md).
 - **Disabled components** — components set to `false` in `[components]` are skipped in `update` and `status`
-- **Logs** — all CLI runs write to `profetch.log` in the data directory alongside the exe
+- **Logs** — all CLI runs write to `propatch.log` in the data directory alongside the exe
 
 ---
 

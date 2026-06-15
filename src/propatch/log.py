@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -9,7 +9,7 @@ _logger: logging.Logger | None = None
 
 def setup(log_path: Path) -> logging.Logger:
     global _logger
-    logger = logging.getLogger("profetch")
+    logger = logging.getLogger("propatch")
     if logger.handlers:
         return logger  # already configured this process
 
@@ -27,4 +27,4 @@ def setup(log_path: Path) -> logging.Logger:
 
 
 def get() -> logging.Logger:
-    return _logger or logging.getLogger("profetch")
+    return _logger or logging.getLogger("propatch")

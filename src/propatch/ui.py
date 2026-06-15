@@ -13,7 +13,7 @@ console = Console(legacy_windows=False)
 
 def print_header(version: str) -> None:
     console.print(
-        f"\n[bold cyan]ProFetch v{version}[/bold cyan]"
+        f"\n[bold cyan]ProPatch v{version}[/bold cyan]"
         f"  [dim]EQ Profusion Component Manager[/dim]\n"
     )
 
@@ -165,7 +165,7 @@ def print_preflight(items: list[dict]) -> None:
 def print_setup_reminder() -> None:
     console.print()
     console.print(
-        "  [dim]Run [bold white]profetch setup[/bold white]"
+        "  [dim]Run [bold white]propatch setup[/bold white]"
         " at any time to reconfigure paths.[/dim]"
     )
     console.print()

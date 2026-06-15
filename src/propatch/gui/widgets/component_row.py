@@ -1,7 +1,7 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import customtkinter as ctk
 from typing import Callable
-from profetch.gui.widgets.tooltip import Tooltip
+from propatch.gui.widgets.tooltip import Tooltip
 
 # (light_mode_color, dark_mode_color)
 _STATUS_COLORS: dict[str, tuple[str, str]] = {

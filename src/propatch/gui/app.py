@@ -1,19 +1,19 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import asyncio
 import logging
 import customtkinter as ctk
 
-from profetch import config, db, log as plog
-from profetch.gui.views.components_view import ComponentsView
-from profetch.gui.views.log_view import LogView
-from profetch.gui.views.setup_wizard import SetupWizard
+from propatch import config, db, log as plog
+from propatch.gui.views.components_view import ComponentsView
+from propatch.gui.views.log_view import LogView
+from propatch.gui.views.setup_wizard import SetupWizard
 
-logger = logging.getLogger("profetch")
+logger = logging.getLogger("propatch")
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-_TITLE = "ProFetch — EQ Profusion Component Manager"
+_TITLE = "ProPatch — EQ Profusion Component Manager [BETA]"
 
 
 def _check_update_breadcrumb() -> None:
@@ -36,19 +36,13 @@ def _check_update_breadcrumb() -> None:
             pass
 
 
-def _seed_profetch_version() -> None:
-    """Store the running ProFetch version in the DB on every startup.
-
-    This ensures the patcher's own version is always tracked correctly —
-    including after a self-update bat swap where a new exe boots for the
-    first time.
-    """
-    from profetch.__about__ import __version__
+def _seed_propatch_version() -> None:
+    from propatch.__about__ import __version__
 
     async def _seed():
         db_path = config.get_db_path()
         await db.init_db(db_path)
-        await db.set_installed_version(db_path, "profetch", f"v{__version__}")
+        await db.set_installed_version(db_path, "propatch", f"v{__version__}")
 
     try:
         asyncio.run(_seed())
@@ -59,18 +53,18 @@ def _seed_profetch_version() -> None:
 def _build_gui_manifest() -> list[dict]:
     """Build the display manifest for the component table.
 
-    ProFetch itself is listed first in the 'patcher' section so users can
+    ProPatch itself is listed first in the 'patcher' section so users can
     see at a glance whether the patcher needs updating.  MQ entries come
     from the hardcoded COMPONENTS fallback; EQ server files are a static
     fallback since they're only defined in the remote manifest TOML.
     """
-    from profetch.components import COMPONENTS
+    from propatch.components import COMPONENTS
 
     result = [
-        {"id": "profetch", "name": "ProFetch", "section": "patcher", "description": ""},
+        {"id": "propatch", "name": "ProPatch", "section": "patcher", "description": ""},
     ]
     for comp in COMPONENTS.values():
-        if comp.id == "profetch":
+        if comp.id == "propatch":
             continue  # already listed in patcher section above
         result.append({
             "id":          comp.id,
@@ -103,9 +97,9 @@ class App(ctk.CTk):
         self.resizable(False, True)
         self.minsize(680, 400)
 
-        plog.setup(config.get_data_dir() / "profetch.log")
+        plog.setup(config.get_data_dir() / "propatch.log")
         _check_update_breadcrumb()
-        _seed_profetch_version()
+        _seed_propatch_version()
 
         self._gui_settings = config.load_gui_settings()
         self._manifest     = _build_gui_manifest()

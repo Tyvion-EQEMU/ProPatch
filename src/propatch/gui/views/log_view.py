@@ -1,10 +1,10 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import logging
 import customtkinter as ctk
 
-from profetch import config, log as plog
+from propatch import config, log as plog
 
-logger = logging.getLogger("profetch")
+logger = logging.getLogger("propatch")
 
 _LEVEL_SETS: dict[str, set[str]] = {
     "DEBUG":   {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"},
@@ -68,7 +68,7 @@ class LogView(ctk.CTkFrame):
         self._apply_filter()
 
     def _load_log(self) -> None:
-        path = config.get_data_dir() / "profetch.log"
+        path = config.get_data_dir() / "propatch.log"
         if not path.exists():
             self._all_lines = ["(No log file yet — run a scan or update to populate it.)\n"]
         else:

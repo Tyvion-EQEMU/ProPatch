@@ -1,19 +1,19 @@
-# Managed Components
+﻿# Managed Components
 
-ProFetch tracks and updates the following components. Each one can be individually enabled/disabled in the GUI or in `settings.local.toml`.
+ProPatch tracks and updates the following components. Each one can be individually enabled/disabled in the GUI or in `settings.local.toml`.
 
 ---
 
-## ProFetch Patcher
+## ProPatch Patcher
 
 | | |
 |---|---|
-| **ID** | `profetch` |
-| **Source** | [Tyvion-EQEMU/ProFetch](https://github.com/Tyvion-EQEMU/ProFetch) |
+| **ID** | `propatch` |
+| **Source** | [Tyvion-EQEMU/ProPatch](https://github.com/Tyvion-EQEMU/ProPatch) |
 | **Tracking** | GitHub release tag |
 | **Installs to** | Replaces itself (self-update) |
 
-ProFetch tracks its own releases. When a newer version is available, it downloads the new `.exe`, waits for the current process to exit, swaps the file, and relaunches automatically. You don't need to do anything — just click Update.
+ProPatch tracks its own releases. When a newer version is available, it downloads the new `.exe`, waits for the current process to exit, swaps the file, and relaunches automatically. You don't need to do anything — just click Update.
 
 ---
 
@@ -26,9 +26,9 @@ ProFetch tracks its own releases. When a newer version is available, it download
 | **Tracking** | GitHub release tag |
 | **Installs to** | MQ root (`C:\Games\MQ-Profusion\` by default) |
 
-The core MacroQuest binary built for EQProfusion by Rekkas. Includes E3Next and MQNext. ProFetch extracts the release zip into your MQ root directory.
+The core MacroQuest binary built for EQProfusion by Rekkas. Includes E3Next and MQNext. ProPatch extracts the release zip into your MQ root directory.
 
-**Protected files** — ProFetch will never overwrite:
+**Protected files** — ProPatch will never overwrite:
 - `config/*` — all files inside the config folder
 - `MacroQuest.ini` — your MQ configuration
 
@@ -45,7 +45,7 @@ The core MacroQuest binary built for EQProfusion by Rekkas. Includes E3Next and 
 | **Tracking** | GitHub release tag |
 | **Installs to** | `plugins\MQ2RWarp.dll` inside your MQ root |
 
-A MQ plugin that provides Warp functionality for EQ Profusion. ProFetch downloads `MQ2RWarp.dll` from the release and drops it into the `plugins/` subfolder of your MQ installation.
+A MQ plugin that provides Warp functionality for EQ Profusion. ProPatch downloads `MQ2RWarp.dll` from the release and drops it into the `plugins/` subfolder of your MQ installation.
 
 Please review Enine's rules and stance on Warp in the Profusion Discord.
 
@@ -60,7 +60,7 @@ Please review Enine's rules and stance on Warp in the Profusion Discord.
 | **Tracking** | GitHub release tag |
 | **Installs to** | `lua\rgmercs\` inside your MQ root |
 
-RGMercs is a lua-based automation system for MacroQuest. ProFetch downloads and extracts `rgmercs.zip` from the release into `lua/rgmercs/` inside your MQ directory.
+RGMercs is a lua-based automation system for MacroQuest. ProPatch downloads and extracts `rgmercs.zip` from the release into `lua/rgmercs/` inside your MQ directory.
 
 ---
 
@@ -73,13 +73,13 @@ RGMercs is a lua-based automation system for MacroQuest. ProFetch downloads and 
 | **Tracking** | GitHub release tag |
 | **Installs to** | `lua\proloot\` inside your MQ root |
 
-ProLoot is a lua-based loot automation script built from the e9loot2.mac provided in Discord for Profusion players. ProFetch downloads the release zip and extracts it into `lua/proloot/` inside your MQ directory.
+ProLoot is a lua-based loot automation script built from the e9loot2.mac provided in Discord for Profusion players. ProPatch downloads the release zip and extracts it into `lua/proloot/` inside your MQ directory.
 
 ---
 
 ## EQ Server Files
 
-These are EverQuest data files specific to and provided directly by the Profusion game server. ProFetch downloads them from the game server live and places them into all of your Profusion EQ directories that you configured during the Setup Wizard.
+These are EverQuest data files specific to and provided directly by the Profusion game server. ProPatch downloads them from the game server live and places them into all of your Profusion EQ directories that you configured during the Setup Wizard.
 
 | Component | File | Location |
 |---|---|---|
@@ -89,7 +89,7 @@ These are EverQuest data files specific to and provided directly by the Profusio
 | `basedata` | `BaseData.txt` | `Resources/` |
 | `dinput8` | `dinput8.dll` | EQ root |
 
-ProFetch tracks these by content hash — it only re-downloads a file if its content has actually changed on the server. If you run multiple EQ instances (e.g., separate folders for tanks and bots), ProFetch updates each one.
+ProPatch tracks these by content hash — it only re-downloads a file if its content has actually changed on the server. If you run multiple EQ instances (e.g., separate folders for tanks and bots), ProPatch updates each one.
 
 ---
 

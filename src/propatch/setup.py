@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import shutil
 import sys
@@ -6,11 +6,11 @@ from pathlib import Path
 
 from rich.prompt import Confirm, Prompt
 
-from profetch import ui
-from profetch.config import _DEFAULT_SETTINGS
+from propatch import ui
+from propatch.config import _DEFAULT_SETTINGS
 
 
-_DEFAULT_INSTALL_DIR = r"C:\Games\ProFetch"
+_DEFAULT_INSTALL_DIR = r"C:\Games\ProPatch"
 
 
 def maybe_run_install_wizard() -> None:
@@ -30,9 +30,9 @@ def maybe_run_install_wizard() -> None:
 
 
 def run_setup(data_dir: Path) -> None:
-    """Re-run path configuration — called by the 'profetch setup' command."""
+    """Re-run path configuration — called by the 'propatch setup' command."""
     ui.console.print()
-    ui.console.print("[bold cyan]  ProFetch — Reconfigure Paths[/bold cyan]")
+    ui.console.print("[bold cyan]  ProPatch — Reconfigure Paths[/bold cyan]")
     ui.console.print()
     try:
         mq_rekkas, eq_instances = _prompt_paths()
@@ -47,9 +47,9 @@ def run_setup(data_dir: Path) -> None:
 
 def _run_install_wizard() -> None:
     ui.console.print()
-    ui.console.print("[bold cyan]  ProFetch — First-Time Setup[/bold cyan]")
+    ui.console.print("[bold cyan]  ProPatch — First-Time Setup[/bold cyan]")
     ui.console.print(
-        "  [dim]ProFetch will copy itself to a permanent location and configure your paths.[/dim]"
+        "  [dim]ProPatch will copy itself to a permanent location and configure your paths.[/dim]"
     )
     ui.console.print()
 
@@ -75,20 +75,20 @@ def _run_install_wizard() -> None:
     _write_settings_local(data_dir, mq_rekkas, eq_instances)
 
     # ── Copy exe ──────────────────────────────────────────────────────────────
-    dest_exe = install_dir / "profetch.exe"
+    dest_exe = install_dir / "propatch.exe"
     src_exe = Path(sys.executable).resolve()
     if src_exe != dest_exe.resolve():
         try:
             shutil.copy2(src_exe, dest_exe)
         except OSError as exc:
-            ui.print_error(f"Could not copy profetch.exe to {install_dir}: {exc}")
+            ui.print_error(f"Could not copy propatch.exe to {install_dir}: {exc}")
             sys.exit(1)
 
     # ── Done ──────────────────────────────────────────────────────────────────
     ui.console.print(f"[green]✓[/green] Installed to:  [bold]{dest_exe}[/bold]")
     ui.console.print(f"[green]✓[/green] Settings in:   [bold]{data_dir}[/bold]")
     ui.console.print()
-    ui.console.print("  Run ProFetch from its new location:")
+    ui.console.print("  Run ProPatch from its new location:")
     ui.console.print(f"  [bold cyan]{dest_exe}[/bold cyan]")
     ui.print_setup_reminder()
 
@@ -110,7 +110,7 @@ def _prompt_paths() -> tuple[str, list[tuple[str, str]]]:
         "  [dim]EQ game directory — needed for EQ file updates (spells, dbstr, etc.)[/dim]"
     )
     ui.console.print(
-        "  [dim]Leave blank to skip; you can add this later with 'profetch setup'.[/dim]"
+        "  [dim]Leave blank to skip; you can add this later with 'propatch setup'.[/dim]"
     )
     eq_dir_raw = Prompt.ask("  EQ game directory", default="", console=ui.console)
 

@@ -33,9 +33,13 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-# proFetch runtime (lives in C:\Users\Public\proFetch, not the repo)
+# ProPatch runtime files — live alongside the exe, not in the repo
 settings.local.toml
+propatch.db
 profetch.db
+
+# Stray old install directory cloned next to the repo
+profetch/
 
 # Local release archive — personal copies of built exes, never pushed
 releases/

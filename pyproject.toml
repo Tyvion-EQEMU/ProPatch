@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "profetch"
+name = "propatch"
 dynamic = ["version"]
 description = "EQProfusion component patcher and updater"
 readme = "README.md"
@@ -23,10 +23,10 @@ dependencies = [
 ]
 
 [project.scripts]
-profetch = "profetch.main:main"
+propatch = "propatch.main:main"
 
 [tool.hatch.version]
-path = "src/profetch/__about__.py"
+path = "src/propatch/__about__.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/profetch"]
+packages = ["src/propatch"]

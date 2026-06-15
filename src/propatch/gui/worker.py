@@ -1,14 +1,14 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import asyncio
 import logging
 from pathlib import Path
 from typing import Callable, Optional
 
-from profetch import config, db, updater
-from profetch.components import COMPONENTS
+from propatch import config, db, updater
+from propatch.components import COMPONENTS
 
-logger = logging.getLogger("profetch")
+logger = logging.getLogger("propatch")
 
 StatusCallback = Callable[[str, str, Optional[str], Optional[str]], None]
 
@@ -117,13 +117,13 @@ def _log_update_result(r: dict, components: dict) -> None:
 
 async def _load_manifest():
     import httpx
-    from profetch import github as gh
+    from propatch import github as gh
     settings      = config.load_settings()
     github_token  = config.get_github_token(settings)
     timeout = httpx.Timeout(connect=30.0, read=60.0, write=None, pool=30.0)
     async with httpx.AsyncClient(timeout=timeout, headers=gh.auth_headers(github_token)) as client:
         try:
-            from profetch.manifest import fetch_manifest
+            from propatch.manifest import fetch_manifest
             components_list, eq_files = await fetch_manifest(client)
             return {c.id: c for c in components_list}, eq_files
         except Exception as exc:
@@ -131,8 +131,8 @@ async def _load_manifest():
             return dict(COMPONENTS), []
 
 
-async def _self_update_profetch(client, comp, installed_version: str | None) -> dict:
-    """Download the latest profetch.exe release and launch a bat-swap restart.
+async def _self_update_propatch(client, comp, installed_version: str | None) -> dict:
+    """Download the latest propatch.exe release and launch a PS1-swap restart.
 
     Returns a status dict:
       "current"              — already on the latest version
@@ -143,7 +143,7 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
     import os
     import subprocess
     import sys
-    from profetch import github
+    from propatch import github
 
     release = await github.get_latest_release(client, comp.owner, comp.repo)
     remote  = release["tag_name"]
@@ -155,17 +155,16 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
         # Dev mode — no exe to swap; just report the update
         return {"status": "update_available", "new_version": remote}
 
-    asset_name = comp.release_asset_name or "profetch.exe"
+    asset_name = comp.release_asset_name or "propatch.exe"
     asset_url  = github.find_release_asset_url(release, asset_name)
     if not asset_url:
         raise ValueError(f"Release asset '{asset_name}' not found in {remote}")
 
     exe_path = Path(sys.executable)
     exe_dir  = exe_path.parent
-    new_exe  = exe_dir / "profetch_new.exe"
-    bat_path = exe_dir / "profetch_update.bat"
+    new_exe  = exe_dir / "propatch_new.exe"
 
-    logger.info(f"  ProFetch: downloading {remote} from {asset_url}")
+    logger.info(f"  ProPatch: downloading {remote} from {asset_url}")
     await github.download_file(client, asset_url, new_exe)
 
     pid     = os.getpid()
@@ -237,7 +236,7 @@ async def _self_update_profetch(client, comp, installed_version: str | None) -> 
         "Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue",
     ]
 
-    ps_path = exe_dir / "profetch_update.ps1"
+    ps_path = exe_dir / "propatch_update.ps1"
     ps_path.write_text("\r\n".join(ps_lines), encoding="utf-8")
 
     # Breadcrumb — read on next successful startup so the result gets logged
@@ -333,11 +332,11 @@ def run_update(
     async def _run():
         await db.init_db(db_path)
         import httpx
-        from profetch import github as gh
+        from propatch import github as gh
         timeout = httpx.Timeout(connect=30.0, read=None, write=None, pool=30.0)
         async with httpx.AsyncClient(timeout=timeout, headers=gh.auth_headers(github_token)) as client:
             try:
-                from profetch.manifest import fetch_manifest
+                from propatch.manifest import fetch_manifest
                 components_list, eq_files = await fetch_manifest(client)
                 components = {c.id: c for c in components_list}
             except Exception:
@@ -350,28 +349,28 @@ def run_update(
             logger.info("--- update ---")
 
             for cid in component_ids:
-                # ── ProFetch self-update (special bat-swap path) ───────────────
-                if cid == "profetch" and cid in components:
+                # ── ProPatch self-update (special PS1-swap path) ──────────────
+                if cid == "propatch" and cid in components:
                     comp = components[cid]
                     on_status(cid, "updating", _display_ver(installed.get(cid)), None)
                     try:
-                        result = await _self_update_profetch(client, comp, installed.get(cid))
+                        result = await _self_update_propatch(client, comp, installed.get(cid))
                     except Exception as exc:
-                        logger.error(f"  ProFetch: self-update failed — {exc}")
+                        logger.error(f"  ProPatch: self-update failed — {exc}")
                         on_status(cid, "update_available", _display_ver(installed.get(cid)), None)
                         continue
 
                     new_v = _display_ver(result.get("new_version"))
                     if result["status"] == "self_update_pending":
-                        logger.info(f"  ProFetch: restarting to apply {new_v}")
+                        logger.info(f"  ProPatch: restarting to apply {new_v}")
                         on_status(cid, "self_update_pending", new_v, new_v)
                         return  # App will restart; new version handles remaining updates
                     elif result["status"] == "current":
-                        logger.info(f"  ProFetch: already current ({new_v})")
+                        logger.info(f"  ProPatch: already current ({new_v})")
                         on_status(cid, "current", new_v, new_v)
                     else:
                         # update_available in dev mode
-                        logger.info(f"  ProFetch: update available (dev mode — no swap)")
+                        logger.info(f"  ProPatch: update available (dev mode — no swap)")
                         on_status(cid, "update_available", _display_ver(installed.get(cid)), new_v)
                     continue
 
