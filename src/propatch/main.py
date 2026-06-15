@@ -2,24 +2,6 @@
 
 import sys
 
-# ── Frozen-exe CLI: re-attach to parent console BEFORE any other imports ──────
-# console=False builds get no stdio from Windows even when launched from a
-# terminal. Re-attach here so that rich, typer, and click all see real handles
-# when they initialise below (rich captures sys.stdout at Console() time).
-if (
-    sys.platform == "win32"
-    and getattr(sys, "frozen", False)
-    and len(sys.argv) > 1
-):
-    import ctypes
-    if ctypes.windll.kernel32.AttachConsole(-1):  # ATTACH_PARENT_PROCESS
-        try:
-            sys.stdout = open("CONOUT$", "w", encoding="utf-8", errors="replace")
-            sys.stderr = open("CONOUT$", "w", encoding="utf-8", errors="replace")
-            sys.stdin  = open("CONIN$",  "r", encoding="utf-8", errors="replace")
-        except OSError:
-            pass
-
 import asyncio
 from pathlib import Path
 
@@ -492,6 +474,12 @@ def version():
 
 
 def _launch_gui() -> None:
+    # Hide the console window that console=True gives us; GUI needs no terminal.
+    if sys.platform == "win32" and getattr(sys, "frozen", False):
+        import ctypes
+        hwnd = ctypes.windll.kernel32.GetConsoleWindow()
+        if hwnd:
+            ctypes.windll.user32.ShowWindow(hwnd, 0)  # SW_HIDE
     from propatch.gui.app import launch
     launch()
 
