@@ -10,7 +10,7 @@ ProPatch stores all of its data — settings, database, and logs — in the same
 |---|---|---|
 | `settings.toml` | Shipped defaults | ProPatch (overwritten on self-update) |
 | `settings.local.toml` | Your overrides | You / Setup Wizard |
-| `gui_settings.json` | GUI state (paths, selected components, EQ instances) | Setup Wizard / GUI |
+| `gui_settings.json` | GUI state (first-run flag, selected components, log level) | Setup Wizard / GUI |
 | `propatch.db` | SQLite database tracking installed versions | ProPatch |
 | `propatch.log` | Debug log | ProPatch |
 
@@ -73,17 +73,17 @@ Shipped with ProPatch and contains the baseline defaults. **Do not edit this fil
 
 Managed by the GUI and Setup Wizard. You generally don't need to edit this by hand, but in a pinch it's plain JSON:
 
+> **Note:** MQ path and EQ directories are stored in `settings.local.toml` under `[paths]`, not here. The GUI reads them directly from that file so both the GUI and CLI always share the same source of truth.
+
 ```json
 {
   "first_run_complete": true,
-  "ProPatch_install_path": "C:\\Games\\ProPatch",
+  "propatch_install_path": "C:\\Games\\ProPatch",
   "install_mq": true,
-  "install_path": "C:\\Games\\MQ-Profusion",
-  "eq_instances": [
-    { "path": "C:\\Games\\EverQuest", "name": "Main" }
-  ],
-  "selected_components": ["ProPatch", "rekkas_mq", "mq2rwarp", "rgmercs", "proloot",
-                          "spells_us", "dbstr_us", "skillcaps", "basedata", "dinput8"]
+  "selected_components": ["propatch", "rekkas_mq", "mq2rwarp", "rgmercs", "proloot",
+                          "spells_us", "dbstr_us", "skillcaps", "basedata", "dinput8"],
+  "custom_components": [],
+  "log_level": "INFO"
 }
 ```
 
