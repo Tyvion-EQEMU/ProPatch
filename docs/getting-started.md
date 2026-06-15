@@ -17,8 +17,8 @@ When ProPatch launches for the first time, the Setup Wizard opens automatically.
 ### ProPatch Install Path
 Where ProPatch will live on your machine. This is also where all settings files and logs are kept. The default (`C:\Games\ProPatch`) works for most people.
 
-### GitHub Token *(optional but recommended)*
-Without a token, GitHub limits API requests to 60/hour — enough for normal use, but you may hit it if you rescan frequently. A token raises the limit to 5,000/hour.
+### GitHub Token *(optional useful if you are a dev/tester)*
+Without a token, GitHub limits API requests to 60/hour — enough for normal use, but you may hit it if you rescan frequently. A token raises the limit to 5,000/hour.  This option will eventually be hidden with v1 release.
 
 To get a token:
 1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
