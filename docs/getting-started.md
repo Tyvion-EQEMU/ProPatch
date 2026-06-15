@@ -17,7 +17,7 @@ When ProPatch launches for the first time, the Setup Wizard opens automatically.
 ### ProPatch Install Path
 Where ProPatch will live on your machine. This is also where all settings files and logs are kept. The default (`C:\Games\ProPatch`) works for most people.
 
-### GitHub Token *(optional useful if you are a dev/tester)*
+### GitHub Token *(optional - useful if you are a dev/tester)*
 Without a token, GitHub limits API requests to 60/hour — enough for normal use, but you may hit it if you rescan frequently. A token raises the limit to 5,000/hour.  This option will eventually be hidden with v1 release.
 
 To get a token:
@@ -35,10 +35,10 @@ Toggle MQ management on or off. If you don't use MacroQuest, flip the toggle off
 
 If MQ is enabled, set **MQ Install Path** to the root of your MQ installation — the folder that contains `MacroQuest.exe`. Default is `C:\Games\MQ-Profusion`.
 
-> **Note:** ProPatch manages Rekkas' MQ build. If you use RedGuides' Very Vanilla (redfetch), make sure you're pointing at a *different* folder — ProPatch should never touch `C:\Games\MQ\`.
+> **Note:** ProPatch leverages Rekkas' MQ build. If you use RedGuides' Very Vanilla (redfetch), or any other MQ compile, make sure you're pointing at a *different* folder else ProPatch will overwrite it.
 
 ### EQ Install Path
-The root of your EverQuest installation — the folder that contains `eqgame.exe`. This is needed so ProPatch can drop in updated server files (spells, DB strings, etc.).
+The root of your EverQuest EMU installation — the folder that contains `eqgame.exe`. This is needed so ProPatch can drop in updated EMU specific server files (spells, DB strings, etc.).  This is NOT your LIVE EQ instance, if you play on LIVE too.
 
 If you run multiple EQ instances for ProFusion (e.g., separate installs for tanks and boxes), use **+ Add EQ Instance** to add each one. ProPatch will update server files in all of them.
 
