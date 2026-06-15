@@ -74,6 +74,10 @@ ProPatch setup           # reconfigure paths
 
 See [docs/cli.md](docs/cli.md) for the full reference.
 
+<p align="center"><img width="350" alt="CLI_Setup" src="https://github.com/user-attachments/assets/5be54a3a-588a-4422-8348-c89480ba4749" /></p>
+
+<p align="center"><img width="350" alt="CLI_Status" src="https://github.com/user-attachments/assets/2739aa81-ae5c-4f71-a440-1d193c8cb2a7" /></p>
+
 ---
 
 ## Support & Community
