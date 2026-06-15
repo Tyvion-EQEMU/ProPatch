@@ -49,3 +49,9 @@ Autoloads popular aliases, the NavMesh Updater utility, optional settings templa
 | v0.5.6 | ProPatch-first update behavior (restarts before updating other components) |
 | v0.5.6 | Self-update breadcrumb logging |
 | v0.5.6 | GitHub ReadMe, Roadmap and Documentation |
+| v0.6.0 | ProFetch → ProPatch rebrand |
+| v0.7.0 | First ProPatch-branded release (BETA) |
+| v0.7.1 | CLI output fix (console=True build with console window hidden in GUI mode) |
+| v0.7.1 | Setup Wizard pre-populates existing settings on re-run |
+| v0.7.1 | Single source of truth: settings.local.toml for all path/token settings |
+| v0.7.1 | Fix manifest component id — propatch stuck "checking" after rebrand |
