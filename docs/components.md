@@ -47,6 +47,8 @@ The core MacroQuest binary built for EQProfusion by Rekkas. Includes E3Next and 
 
 A MQ plugin that provides Warp functionality for EQ Profusion. ProPatch downloads `MQ2RWarp.dll` from the release and drops it into the `plugins/` subfolder of your MQ installation.
 
+This repo is forked from [TheDroidYourLookingFor/MQ2RWarp](https://github.com/TheDroidYourLookingFor/MQ2RWarp)
+
 Please review Enine's rules and stance on Warp in the Profusion Discord.
 
 ---
