@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import shutil
 import sys
@@ -31,15 +31,45 @@ def maybe_run_install_wizard() -> None:
 
 def run_setup(data_dir: Path) -> None:
     """Re-run path configuration — called by the 'propatch setup' command."""
+    from propatch import config as cfg
+
+    settings = cfg.load_settings()
+
+    # Load current values to use as prompt defaults
+    try:
+        current_mq = str(settings.PATHS.mq_rekkas)
+    except Exception:
+        current_mq = r"C:\Games\MQ-Profusion"
+
+    current_eq: list[tuple[str, str]] = []
+    try:
+        raw_dirs = settings.get("PATHS.eq_dirs", default=[])
+        if isinstance(raw_dirs, str):
+            raw_dirs = [raw_dirs]
+        dirs = [str(d) for d in raw_dirs if d]
+        raw_names = settings.get("PATHS.eq_dir_names", default=[])
+        if isinstance(raw_names, str):
+            raw_names = [raw_names]
+        names = list(raw_names)
+        current_eq = [
+            (dirs[i], names[i] if i < len(names) else "")
+            for i in range(len(dirs))
+        ]
+    except Exception:
+        pass
+
+    existing_token = cfg.get_github_token(settings) or ""
+
     ui.console.print()
     ui.console.print("[bold cyan]  ProPatch — Reconfigure Paths[/bold cyan]")
     ui.console.print()
     try:
-        mq_rekkas, eq_instances = _prompt_paths()
+        mq_rekkas, eq_instances = _prompt_paths(current_mq, current_eq)
     except KeyboardInterrupt:
         ui.console.print("\n[yellow]Setup cancelled.[/yellow]")
         return
-    _write_settings_local(data_dir, mq_rekkas, eq_instances)
+
+    _write_settings_local(data_dir, mq_rekkas, eq_instances, existing_token)
     ui.console.print()
     ui.console.print("[green]✓[/green] Settings updated.")
     ui.print_setup_reminder()
@@ -93,22 +123,36 @@ def _run_install_wizard() -> None:
     ui.print_setup_reminder()
 
 
-def _prompt_paths() -> tuple[str, list[tuple[str, str]]]:
-    """Ask for MQ Patch path and EQ game directories. Returns (mq_path, [(dir, name), ...])."""
+def _prompt_paths(
+    current_mq: str = r"C:\Games\MQ-Profusion",
+    current_eq: list[tuple[str, str]] | None = None,
+) -> tuple[str, list[tuple[str, str]]]:
+    """Prompt for MQ and EQ paths, showing existing values as defaults."""
+    if current_eq is None:
+        current_eq = []
 
-    # MQ Patch
+    # MQ path
     ui.console.print(
         "  [dim]MQ Install — root folder of the Rekkas MQ install (e.g. C:\\Games\\MQ-Profusion)[/dim]"
     )
-    mq_rekkas = Prompt.ask(
-        "  MQ Install", default=r"C:\Games\MQ-Profusion", console=ui.console
-    )
+    mq_rekkas = Prompt.ask("  MQ Install", default=current_mq, console=ui.console)
 
     # EQ directories
     ui.console.print()
     ui.console.print(
         "  [dim]EQ game directory — needed for EQ file updates (spells, dbstr, etc.)[/dim]"
     )
+
+    if current_eq:
+        ui.console.print("  [dim]Current EQ directories:[/dim]")
+        for path, name in current_eq:
+            label = f"  ({name})" if name else ""
+            ui.console.print(f"  [dim]    {path}{label}[/dim]")
+        ui.console.print()
+        keep = Confirm.ask("  Keep existing EQ directories?", default=True, console=ui.console)
+        if keep:
+            return mq_rekkas, current_eq
+
     ui.console.print(
         "  [dim]Leave blank to skip; you can add this later with 'propatch setup'.[/dim]"
     )
@@ -155,9 +199,18 @@ def _toml_str(value: str) -> str:
 
 
 def _write_settings_local(
-    data_dir: Path, mq_rekkas: str, eq_instances: list[tuple[str, str]]
+    data_dir: Path,
+    mq_rekkas: str,
+    eq_instances: list[tuple[str, str]],
+    token: str = "",
 ) -> None:
-    lines = ["[paths]", f'mq_rekkas = "{_toml_str(mq_rekkas)}"']
+    lines: list[str] = []
+
+    if token.strip():
+        lines.append(f'github_token = "{_toml_str(token.strip())}"')
+        lines.append("")
+
+    lines += ["[paths]", f'mq_rekkas = "{_toml_str(mq_rekkas)}"']
 
     if eq_instances:
         paths_toml = ", ".join(f'"{_toml_str(inst[0])}"' for inst in eq_instances)

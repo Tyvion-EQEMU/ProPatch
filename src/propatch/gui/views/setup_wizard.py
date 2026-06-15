@@ -232,7 +232,37 @@ class SetupWizard(ctk.CTkFrame):
         self._eq_container = ctk.CTkFrame(parent, fg_color="transparent")
         self._eq_container.pack(fill="x")
 
-        self._add_eq_row(show_name=False)
+        existing = self._gui_settings.get("eq_instances", [])
+
+        # Fall back to settings.local.toml when gui_settings hasn't been saved yet
+        if not existing:
+            try:
+                from propatch import config as _cfg
+                _s = _cfg.load_settings()
+                _dirs = _s.get("PATHS.eq_dirs", default=[])
+                if isinstance(_dirs, str):
+                    _dirs = [_dirs]
+                _dirs = [str(d) for d in _dirs if d]
+                _names = _s.get("PATHS.eq_dir_names", default=[])
+                if isinstance(_names, str):
+                    _names = [_names]
+                _names = list(_names)
+                existing = [
+                    {"path": _dirs[i], "name": _names[i] if i < len(_names) else ""}
+                    for i in range(len(_dirs))
+                ]
+            except Exception:
+                pass
+
+        if existing:
+            for inst in existing:
+                self._add_eq_row(
+                    show_name=len(existing) > 1,
+                    path=inst.get("path", ""),
+                    name=inst.get("name", ""),
+                )
+        else:
+            self._add_eq_row(show_name=False)
 
         self._add_eq_btn = ctk.CTkButton(
             parent,
