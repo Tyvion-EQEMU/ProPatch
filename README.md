@@ -24,7 +24,7 @@ None of the components pre-configured with this patcher are required nor "instal
 ## Getting Started
 
 1. **Download** `ProPatch.exe` from the [Releases](https://github.com/Tyvion-EQEMU/ProPatch/releases) page.
-2. **Run it** The Setup Wizard opens on first launch and walks you through:
+2. **Run it** - the Setup Wizard opens on first launch and walks you through:
    - Where to keep ProPatch (and its settings/logs)
    - Whether you want MacroQuest, or not
    - Where your MQ installation lives
