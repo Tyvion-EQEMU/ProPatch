@@ -170,7 +170,7 @@ def update(
     try:
         mq_rekkas = Path(settings.PATHS.mq_rekkas)
     except Exception:
-        mq_rekkas = Path(r"C:\Games\MQ-Rekkas")
+        mq_rekkas = Path(r"C:\Games\MQ-Profusion")
 
     eq_dirs = _get_eq_dirs(settings)
     plog.setup(config.get_data_dir() / "profetch.log")

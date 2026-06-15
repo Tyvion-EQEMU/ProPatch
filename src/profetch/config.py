@@ -8,7 +8,7 @@ from pathlib import Path
 
 _DEFAULT_SETTINGS = """\
 [paths]
-mq_rekkas = "C:\\\\Games\\\\MQ-Rekkas"
+mq_rekkas = "C:\\\\Games\\\\MQ-Profusion"
 eq_dirs = []
 
 # Optional: GitHub Personal Access Token
@@ -103,7 +103,7 @@ _GUI_DEFAULTS: dict = {
     "first_run_complete":     False,
     "profetch_install_path":  r"C:\Games\ProFetch",
     "install_mq":             True,
-    "install_path":           r"C:\Games\MQ-Rekkas",
+    "install_path":           r"C:\Games\MQ-Profusion",
     "eq_instances":           [],
     "selected_components":    ["profetch",
                                "rekkas_mq", "mq2rwarp", "rgmercs", "proloot",

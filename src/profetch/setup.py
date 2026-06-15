@@ -98,10 +98,10 @@ def _prompt_paths() -> tuple[str, list[tuple[str, str]]]:
 
     # MQ Patch
     ui.console.print(
-        "  [dim]MQ Install — root folder of the Rekkas MQ install (e.g. C:\\Games\\MQ-Rekkas)[/dim]"
+        "  [dim]MQ Install — root folder of the Rekkas MQ install (e.g. C:\\Games\\MQ-Profusion)[/dim]"
     )
     mq_rekkas = Prompt.ask(
-        "  MQ Install", default=r"C:\Games\MQ-Rekkas", console=ui.console
+        "  MQ Install", default=r"C:\Games\MQ-Profusion", console=ui.console
     )
 
     # EQ directories

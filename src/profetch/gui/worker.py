@@ -327,7 +327,7 @@ def run_update(
     try:
         mq_rekkas = Path(settings.PATHS.mq_rekkas)
     except Exception:
-        mq_rekkas = Path(r"C:\Games\MQ-Rekkas")
+        mq_rekkas = Path(r"C:\Games\MQ-Profusion")
     eq_dirs = _get_eq_dirs(settings)
 
     async def _run():

@@ -191,13 +191,15 @@ class SetupWizard(ctk.CTkFrame):
         toggle_row = ctk.CTkFrame(parent, fg_color="transparent")
         toggle_row.pack(fill="x", pady=3)
 
-        ctk.CTkLabel(
+        mq_lbl = ctk.CTkLabel(
             toggle_row,
             text="Install and update MacroQuest",
             font=ctk.CTkFont(size=12),
             anchor="w",
             width=_LABEL_W + _ENTRY_W,
-        ).pack(side="left", padx=(8, 0))
+        )
+        mq_lbl.pack(side="left", padx=(8, 0))
+        Tooltip(mq_lbl, "If you wish to ignore and leave off all MQ components, toggle this OFF")
 
         self._mq_var = ctk.BooleanVar(value=self._gui_settings.get("install_mq", True))
         mq_switch = ctk.CTkSwitch(
@@ -208,12 +210,11 @@ class SetupWizard(ctk.CTkFrame):
             command=self._on_mq_toggle,
         )
         mq_switch.pack(side="left", padx=(12, 0))
-        Tooltip(mq_switch, "If you wish to ignore and leave off all MQ components, toggle this OFF")
 
         self._mq_path_frame, _ = self._make_path_row(
             parent,
             label="MQ Install Path",
-            default=self._gui_settings.get("install_path", r"C:\Games\MQ-Rekkas"),
+            default=self._gui_settings.get("install_path", r"C:\Games\MQ-Profusion"),
             setting_key="install_path",
         )
         if self._mq_var.get():
@@ -245,8 +246,6 @@ class SetupWizard(ctk.CTkFrame):
             command=self._on_add_eq_instance,
         )
         self._add_eq_btn.pack(fill="x", padx=4, pady=(6, 4))
-        Tooltip(self._add_eq_btn,
-                "If you have multiple installs, ensure all appropriate instances have server files for Profusion.")
 
     def _add_eq_row(self, show_name: bool = True, path: str = "", name: str = "") -> None:
         row_frame = ctk.CTkFrame(self._eq_container, fg_color="transparent")
@@ -257,9 +256,12 @@ class SetupWizard(ctk.CTkFrame):
 
         path_row = ctk.CTkFrame(row_frame, fg_color="transparent")
         path_row.pack(fill="x")
-        ctk.CTkLabel(path_row, text="EQ Install Path",
-                     width=_LABEL_W, anchor="w",
-                     font=ctk.CTkFont(size=12)).pack(side="left", padx=(8, 0))
+        eq_path_lbl = ctk.CTkLabel(path_row, text="EQ Install Path",
+                                   width=_LABEL_W, anchor="w",
+                                   font=ctk.CTkFont(size=12))
+        eq_path_lbl.pack(side="left", padx=(8, 0))
+        Tooltip(eq_path_lbl,
+                "If you have multiple installs, ensure all appropriate instances have server files for Profusion.")
         ctk.CTkEntry(path_row, textvariable=path_var, width=_ENTRY_W).pack(side="left", padx=(6, 4))
         ctk.CTkButton(path_row, text="Browse", width=_BTN_W,
                       command=lambda v=path_var: self._browse_folder(v)).pack(side="left", padx=(0, 4))
@@ -380,7 +382,7 @@ class SetupWizard(ctk.CTkFrame):
         # Write TOML settings (paths + optional token) so the backend can pick them up
         try:
             config.save_path_settings(
-                mq_rekkas=self._gui_settings.get("install_path", r"C:\Games\MQ-Rekkas"),
+                mq_rekkas=self._gui_settings.get("install_path", r"C:\Games\MQ-Profusion"),
                 eq_instances=instances,
                 github_token=self._token_var.get().strip(),
             )

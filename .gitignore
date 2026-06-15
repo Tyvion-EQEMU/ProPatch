@@ -36,3 +36,6 @@ Thumbs.db
 # proFetch runtime (lives in C:\Users\Public\proFetch, not the repo)
 settings.local.toml
 profetch.db
+
+# Local release archive — personal copies of built exes, never pushed
+releases/

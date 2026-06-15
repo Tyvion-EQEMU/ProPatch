@@ -6,8 +6,9 @@ class Tooltip:
     """Hover tooltip for any tkinter or CTK widget.
 
     CTK widgets have internal child widgets that cause <Leave> to fire when
-    the mouse moves between them. This class binds recursively to all children
-    and ignores <Leave> events where the pointer is still within the root widget.
+    the mouse moves between them. _on_leave uses winfo_containing to check
+    whether the pointer is still over the root widget or any descendant before
+    deciding to dismiss — more reliable than a pixel bounding-box check.
     """
 
     def __init__(self, widget, text: str, delay: int = 500) -> None:
@@ -25,24 +26,28 @@ class Tooltip:
         for child in widget.winfo_children():
             self._bind_recursive(child)
 
+    def _is_over_root(self) -> bool:
+        """Return True if the pointer is over the root widget or any of its descendants."""
+        try:
+            px = self._root.winfo_pointerx()
+            py = self._root.winfo_pointery()
+            under = self._root.winfo_containing(px, py)
+            if under is None:
+                return False
+            root_name = str(self._root)
+            target    = str(under)
+            return target == root_name or target.startswith(root_name + ".")
+        except Exception:
+            return False
+
     def _on_enter(self, event=None) -> None:
         if self._after_id:
             return
         self._after_id = self._root.after(self._delay, self._show)
 
     def _on_leave(self, event=None) -> None:
-        # Ignore leave events where the pointer is still inside the root widget
-        try:
-            rx = self._root.winfo_rootx()
-            ry = self._root.winfo_rooty()
-            rw = self._root.winfo_width()
-            rh = self._root.winfo_height()
-            px = self._root.winfo_pointerx()
-            py = self._root.winfo_pointery()
-            if rx <= px <= rx + rw and ry <= py <= ry + rh:
-                return
-        except Exception:
-            pass
+        if self._is_over_root():
+            return
         if self._after_id:
             self._root.after_cancel(self._after_id)
             self._after_id = None
@@ -51,6 +56,8 @@ class Tooltip:
     def _show(self) -> None:
         self._after_id = None
         if self._tip_win:
+            return
+        if not self._is_over_root():
             return
         try:
             x = self._root.winfo_rootx() + 10
