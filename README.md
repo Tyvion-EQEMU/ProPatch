@@ -1,8 +1,10 @@
-﻿# ProPatch — EQProfusion Component Manager
+﻿# ProPatch — Profusion Component Manager
 
-ProPatch is a simple Windows patcher for the **E9 Profusion** EverQuest EMU server. It manages all your Profusion specific EQ files, MacroQuest install, and lua scripts in sync with their GitHub releases — all from a single console.
+ProPatch is a simple Windows patcher for the **E9 Profusion** EQ EMU server. It manages all your Profusion specific EQ files, MacroQuest install, and lua scripts in sync with their GitHub releases — all from a single console.
 
-None of the components automatically included with this patcher are required.  You can opt-out of any of the components and in a future release I will give you the option to put in your own if there is something you'd like to be patched automatically.  All you'll need to provide is its github repo.
+None of the components pre-configured with this patcher are required nor installed "by default".  You can opt-out of any of the components for any are installed and in a future release I will give you the option to put in your own if there is something you'd like to be patched automatically.  All you'll need to provide is its github repo or source path.
+
+<p align="center"><img width="350" alt="Profusion_Patcher_Main" src="https://github.com/user-attachments/assets/8edad7f6-e844-4af1-9cf7-0c301eb69cc5" /></p>
 
 ---
 
@@ -31,6 +33,8 @@ None of the components automatically included with this patcher are required.  Y
 4. **Hit Update** ProPatch checks every component and downloads anything that's out of date.
 
 > See **[docs/getting-started.md](docs/getting-started.md)** for a full walkthrough with screenshots.
+
+<p align="center"><img width="350" alt="Profusion_Patcher_Setup_Wizard" src="https://github.com/user-attachments/assets/843fdb1c-2873-4265-8847-6f9b772a76e0" /></p>
 
 ---
 
