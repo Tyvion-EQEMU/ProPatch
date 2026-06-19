@@ -131,10 +131,16 @@ class App(ctk.CTk):
             self._current_view.grid(row=0, column=0, sticky="nsew")
 
 
-def launch() -> None:
-    config.ensure_data_dir()
-    app = App()
+def _force_to_front(app: "App") -> None:
     app.deiconify()
     app.lift()
     app.focus_force()
+    app.attributes("-topmost", True)
+    app.after(500, lambda: app.attributes("-topmost", False))
+
+
+def launch() -> None:
+    config.ensure_data_dir()
+    app = App()
+    app.after(100, lambda: _force_to_front(app))
     app.mainloop()
