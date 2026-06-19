@@ -132,7 +132,15 @@ class App(ctk.CTk):
 
 
 def _force_to_front(app: "App") -> None:
+    import ctypes
+    state = app.state()
+    viewable = app.winfo_viewable()
+    hwnd = app.winfo_id()
+    logger.info(f"[launch] window state={state!r} viewable={viewable} hwnd={hwnd}")
     app.deiconify()
+    ctypes.windll.user32.ShowWindow(hwnd, 9)   # SW_RESTORE
+    ctypes.windll.user32.BringWindowToTop(hwnd)
+    ctypes.windll.user32.SetForegroundWindow(hwnd)
     app.lift()
     app.focus_force()
     app.attributes("-topmost", True)
