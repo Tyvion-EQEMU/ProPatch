@@ -134,15 +134,20 @@ class App(ctk.CTk):
 def _force_to_front(app: "App", tag: str = "") -> None:
     import ctypes
     hwnd = app.winfo_id()
-    logger.info(f"[launch{tag}] state={app.state()!r} viewable={app.winfo_viewable()} hwnd={hwnd}")
+    x, y = app.winfo_x(), app.winfo_y()
+    logger.info(f"[launch{tag}] state={app.state()!r} viewable={app.winfo_viewable()} pos={x},{y} hwnd={hwnd}")
     app.deiconify()
+    # Force to a known on-screen position in case the window spawned off-screen
+    app.geometry("680x600+100+100")
     ctypes.windll.user32.ShowWindow(hwnd, 1)   # SW_SHOWNORMAL
     ctypes.windll.user32.BringWindowToTop(hwnd)
     ctypes.windll.user32.SetForegroundWindow(hwnd)
     app.lift()
     app.focus_force()
     app.attributes("-topmost", True)
-    logger.info(f"[launch{tag}-post] state={app.state()!r} viewable={app.winfo_viewable()}")
+    # Flash taskbar button as fallback attention signal
+    ctypes.windll.user32.FlashWindow(hwnd, True)
+    logger.info(f"[launch{tag}-post] state={app.state()!r} pos={app.winfo_x()},{app.winfo_y()}")
     app.after(500, lambda: app.attributes("-topmost", False))
 
 
