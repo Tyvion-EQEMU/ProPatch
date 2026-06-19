@@ -33,6 +33,7 @@ def _parse_component(d: dict) -> Component:
         release_asset_name=d.get("release_asset_name"),
         zip_subdir=d.get("zip_subdir"),
         show_version=d.get("show_version", False),
+        extract_asset=d.get("extract_asset", False),
     )
 
 

@@ -27,7 +27,7 @@ def _is_on_disk(component: Component, mq_rekkas: Path) -> bool:
     if not mq_rekkas.exists():
         return False
     dest = mq_rekkas / component.destination if component.destination else mq_rekkas
-    if component.release_asset_name:
+    if component.release_asset_name and not component.extract_asset:
         return (dest / component.release_asset_name).exists()
     elif component.destination:
         return dest.is_dir() and any(dest.iterdir())
@@ -86,7 +86,10 @@ async def _check_one(
         else:
             status = "not_installed"
     elif installed_version == remote:
-        status = "current"
+        if mq_rekkas and not _is_on_disk(component, mq_rekkas):
+            status = "not_installed"
+        else:
+            status = "current"
     else:
         status = "update_available"
 
@@ -240,7 +243,7 @@ async def update_one(
     except Exception as exc:
         return _error_result(component, installed_version, None, str(exc))
 
-    if installed_version == remote:
+    if installed_version == remote and _is_on_disk(component, mq_rekkas):
         return {
             "id": component.id,
             "name": component.name,
