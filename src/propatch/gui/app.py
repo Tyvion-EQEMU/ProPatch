@@ -131,24 +131,24 @@ class App(ctk.CTk):
             self._current_view.grid(row=0, column=0, sticky="nsew")
 
 
-def _force_to_front(app: "App") -> None:
+def _force_to_front(app: "App", tag: str = "") -> None:
     import ctypes
-    state = app.state()
-    viewable = app.winfo_viewable()
     hwnd = app.winfo_id()
-    logger.info(f"[launch] window state={state!r} viewable={viewable} hwnd={hwnd}")
+    logger.info(f"[launch{tag}] state={app.state()!r} viewable={app.winfo_viewable()} hwnd={hwnd}")
     app.deiconify()
-    ctypes.windll.user32.ShowWindow(hwnd, 9)   # SW_RESTORE
+    ctypes.windll.user32.ShowWindow(hwnd, 1)   # SW_SHOWNORMAL
     ctypes.windll.user32.BringWindowToTop(hwnd)
     ctypes.windll.user32.SetForegroundWindow(hwnd)
     app.lift()
     app.focus_force()
     app.attributes("-topmost", True)
+    logger.info(f"[launch{tag}-post] state={app.state()!r} viewable={app.winfo_viewable()}")
     app.after(500, lambda: app.attributes("-topmost", False))
 
 
 def launch() -> None:
     config.ensure_data_dir()
     app = App()
-    app.after(100, lambda: _force_to_front(app))
+    app.after(0, lambda: _force_to_front(app, "-t0"))
+    app.after(3000, lambda: _force_to_front(app, "-t3s"))
     app.mainloop()
