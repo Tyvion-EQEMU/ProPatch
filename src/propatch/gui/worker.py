@@ -220,7 +220,7 @@ async def _self_update_propatch(client, comp, installed_version: str | None) -> 
         "#    the new exe's two-stage bootloader initialises from scratch.",
         "try {",
         "    $shell = New-Object -ComObject Shell.Application",
-        '    $shell.ShellExecute($exe, "", "", "open", 1)',
+        "    $shell.ShellExecute($exe)",
         "} catch {",
         "    # Fallback: strip PyInstaller vars then use Start-Process",
         "    $keys = @([System.Environment]::GetEnvironmentVariables(",

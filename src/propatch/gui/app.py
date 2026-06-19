@@ -134,4 +134,7 @@ class App(ctk.CTk):
 def launch() -> None:
     config.ensure_data_dir()
     app = App()
+    app.deiconify()
+    app.lift()
+    app.focus_force()
     app.mainloop()
